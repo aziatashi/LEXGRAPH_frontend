@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Tamil:wght@400;600&family=Noto+Sans+Telugu:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Noto+Sans+Kannada:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #FAF6EE; }
+  * { box-sizing: border-box; }
+  a { color: #2F5C8A; text-decoration: none; }
+  a:hover { color: #264468; text-decoration: underline; }
+  button { font: inherit; }
+  textarea { font: inherit; }
+  ::selection { background: #EECE95; color: #18304A; }
+  @keyframes lg-dot { 0%, 60%, 100% { opacity: .25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+  @keyframes lg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#FAF6EE;font-family:Inter,system-ui,sans-serif;color:#3F3F3F;font-size:16px;line-height:1.65;display:flex;flex-direction:column">
+
+  <header style="position:sticky;top:0;z-index:40;background:rgba(250,246,238,.92);backdrop-filter:blur(8px);borderBottom:1px solid #E4E4E4">
+    <div style="max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px">
+      <a href="#" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;flex:0 0 auto">
+        <span style="width:30px;height:30px;border-radius:8px;background:#18304A;display:flex;align-items:center;justify-content:center;flex:0 0 auto">
+          <span style="width:10px;height:10px;background:#EECE95;border-radius:2px;display:block"></span>
+        </span>
+        <span style="font-family:'Source Serif 4',Georgia,serif;font-size:20px;font-weight:600;color:#18304A;letter-spacing:-.01em">LexGraph</span>
+      </a>
+      <nav aria-label="Main" style="display:flex;gap:4px;flex-wrap:wrap;margin-left:8px;flex:1 1 auto">
+        <a href="#" style="padding:8px 12px;border-radius:8px;font-size:14px;color:#3F3F3F;text-decoration:none" style-hover="background:#F2E2C4;color:#18304A">Knowledge</a>
+        <a href="#" style="padding:8px 12px;border-radius:8px;font-size:14px;color:#3F3F3F;text-decoration:none" style-hover="background:#F2E2C4;color:#18304A">How it works</a>
+        <a href="#" style="padding:8px 12px;border-radius:8px;font-size:14px;color:#3F3F3F;text-decoration:none" style-hover="background:#F2E2C4;color:#18304A">Find free legal help</a>
+      </nav>
+      <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto;position:relative">
+        <button type="button" aria-haspopup="true" aria-expanded="{{ langMenu }}" onClick="{{ toggleLangMenu }}" style="display:flex;align-items:center;gap:7px;min-height:40px;padding:8px 12px;border-radius:10px;border:1px solid #D3D3D3;background:#FFFFFF;color:#18304A;font-size:14px;font-weight:500;cursor:pointer" style-hover="border-color:#3A6EA5;background:#F5EDDD">
+          <span aria-hidden="true" style="width:14px;height:14px;border:1.5px solid #2F5C8A;border-radius:50%;display:inline-block"></span>
+          <span style="white-space:nowrap">{{ localeLabel }}</span>
+        </button>
+        <button type="button" onClick="{{ startNew }}" style="min-height:40px;padding:9px 16px;border-radius:10px;border:1px solid #2F5C8A;background:#2F5C8A;color:#FFFFFF;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#264468;border-color:#264468">Ask a question</button>
+        <sc-if value="{{ langMenu }}" hint-placeholder-val="{{ false }}">
+          <div role="menu" style="position:absolute;top:52px;right:0;width:230px;background:#FFFFFF;border:1px solid #D3D3D3;border-radius:14px;box-shadow:0 18px 40px -14px rgba(12,24,38,.3);padding:6px;z-index:50">
+            <p style="margin:8px 10px 6px;font-size:12px;font-weight:500;color:#6E6E6E;text-transform:uppercase;letter-spacing:.06em">Language</p>
+            <sc-for list="{{ languages }}" as="lang" hint-placeholder-count="6">
+              <button type="button" role="menuitemradio" aria-checked="{{ lang.active }}" onClick="{{ lang.onPick }}" style="display:flex;width:100%;align-items:baseline;gap:8px;padding:10px;border:0;border-radius:10px;background:{{ lang.menuBg }};color:#18304A;text-align:left;cursor:pointer" style-hover="background:#F5EDDD">
+                <span style="font-family:{{ lang.font }};font-size:15px;font-weight:600">{{ lang.native }}</span>
+                <span style="font-size:12px;color:#6E6E6E">{{ lang.latin }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </header>
+
+  <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+  <main style="flex:1 1 auto">
+
+    <sc-if value="{{ heroA }}" hint-placeholder-val="{{ true }}">
+    <section style="max-width:1180px;margin:0 auto;padding:72px 20px 24px;text-align:center">
+      <p style="margin:0 0 18px;display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:9999px;background:#F5EDDD;border:1px solid #EECE95;color:#18304A;font-size:13px;font-weight:500;white-space:nowrap">Free · No sign-up · Six languages</p>
+      <h1 style="margin:0 auto 18px;max-width:19ch;font-family:'Source Serif 4',Georgia,serif;font-size:clamp(32px,5.2vw,54px);line-height:1.08;font-weight:600;letter-spacing:-.02em;color:#18304A;text-wrap:balance">Describe your legal problem. Get clear answers in your language.</h1>
+      <p style="margin:0 auto 34px;max-width:56ch;font-size:18px;line-height:1.6;color:#595959;text-wrap:pretty">Write it the way you would tell a friend — no legal words needed. LexGraph explains what is going on, what usually happens next, and where to get free human help.</p>
+      <div style="max-width:760px;margin:0 auto;background:#FFFFFF;border:1px solid #D3D3D3;border-radius:20px;box-shadow:0 18px 44px -22px rgba(24,48,74,.28);padding:18px 18px 14px;text-align:left">
+        <label for="hero-input" style="display:block;font-size:13px;font-weight:600;color:#18304A;margin-bottom:8px">What happened?</label>
+        <textarea id="hero-input" rows="3" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="{{ heroPlaceholder }}" style="width:100%;resize:none;border:0;outline:none;background:transparent;font-size:18px;line-height:1.6;color:#3F3F3F;padding:0 0 8px"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid #E4E4E4;padding-top:12px">
+          <p style="margin:0;font-size:12px;color:#6E6E6E;max-width:44ch">Please leave out names, Aadhaar and account numbers. You do not need them for an answer.</p>
+          <button type="button" onClick="{{ submitDraft }}" style="min-height:48px;padding:12px 22px;border-radius:10px;border:0;background:#2F5C8A;color:#FFFFFF;font-size:16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:10px" style-hover="background:#264468">
+            <span>Get an answer</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px auto 0;max-width:860px">
+        <sc-for list="{{ examples }}" as="ex" hint-placeholder-count="6">
+          <button type="button" onClick="{{ ex.onPick }}" style="min-height:44px;padding:10px 16px;border-radius:9999px;border:1px solid #D3D3D3;background:#FDFBF7;color:#3F3F3F;font-size:14px;cursor:pointer" style-hover="background:#F2E2C4;border-color:#EECE95;color:#18304A">{{ ex.label }}</button>
+        </sc-for>
+      </div>
+    </section>
+    </sc-if>
+
+    <sc-if value="{{ heroB }}" hint-placeholder-val="{{ false }}">
+    <section style="max-width:1180px;margin:0 auto;padding:60px 20px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:40px;align-items:start">
+      <div>
+        <p style="margin:0 0 18px;display:inline-flex;padding:6px 14px;border-radius:9999px;background:#F5EDDD;border:1px solid #EECE95;color:#18304A;font-size:13px;font-weight:500;white-space:nowrap">Free · No sign-up · Six languages</p>
+        <h1 style="margin:0 0 18px;font-family:'Source Serif 4',Georgia,serif;font-size:clamp(32px,4.4vw,48px);line-height:1.1;font-weight:600;letter-spacing:-.02em;color:#18304A;text-wrap:balance">Describe your legal problem. Get clear answers in your language.</h1>
+        <p style="margin:0 0 26px;max-width:52ch;font-size:18px;line-height:1.6;color:#595959;text-wrap:pretty">Write it the way you would tell a friend — no legal words needed.</p>
+        <div style="background:#FFFFFF;border:1px solid #D3D3D3;border-radius:20px;box-shadow:0 18px 44px -22px rgba(24,48,74,.28);padding:16px">
+          <label for="hero-input-b" style="display:block;font-size:13px;font-weight:600;color:#18304A;margin-bottom:8px">What happened?</label>
+          <textarea id="hero-input-b" rows="4" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="{{ heroPlaceholder }}" style="width:100%;resize:none;border:0;outline:none;background:transparent;font-size:17px;line-height:1.6;color:#3F3F3F;padding:0 0 10px"></textarea>
+          <button type="button" onClick="{{ submitDraft }}" style="width:100%;min-height:48px;border-radius:10px;border:0;background:#2F5C8A;color:#FFFFFF;font-size:16px;font-weight:600;cursor:pointer" style-hover="background:#264468">Get an answer</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+          <sc-for list="{{ examplesShort }}" as="ex" hint-placeholder-count="4">
+            <button type="button" onClick="{{ ex.onPick }}" style="min-height:44px;padding:10px 14px;border-radius:9999px;border:1px solid #D3D3D3;background:#FDFBF7;color:#3F3F3F;font-size:14px;cursor:pointer" style-hover="background:#F2E2C4;border-color:#EECE95;color:#18304A">{{ ex.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <aside style="background:#18304A;border-radius:20px;padding:32px;color:#FFFFFF">
+        <p style="margin:0 0 22px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#EECE95">What you get back</p>
+        <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:20px">
+          <li><p style="margin:0 0 4px;font-size:17px;font-weight:600;color:#FFFFFF">A plain-language summary</p><p style="margin:0;font-size:15px;color:#9DBBD8">In two sentences, before anything else.</p></li>
+          <li><p style="margin:0 0 4px;font-size:17px;font-weight:600;color:#FFFFFF">Concrete next steps</p><p style="margin:0;font-size:15px;color:#9DBBD8">Numbered, in the order you should do them.</p></li>
+          <li><p style="margin:0 0 4px;font-size:17px;font-weight:600;color:#FFFFFF">The law it comes from</p><p style="margin:0;font-size:15px;color:#9DBBD8">Act and section, shown only when we have it.</p></li>
+          <li><p style="margin:0 0 4px;font-size:17px;font-weight:600;color:#FFFFFF">A route to a real person</p><p style="margin:0;font-size:15px;color:#9DBBD8">Free legal aid near you, on one tap.</p></li>
+        </ol>
+      </aside>
+    </section>
+    </sc-if>
+
+    <section style="max-width:1180px;margin:0 auto;padding:56px 20px">
+      <h2 style="margin:0 0 28px;font-family:'Source Serif 4',Georgia,serif;font-size:28px;font-weight:600;color:#18304A">How it works</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+        <div style="background:#FDFBF7;border:1px solid #E4E4E4;border-radius:14px;padding:24px;border-top:3px solid #EECE95">
+          <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#2F5C8A">Step 1</p>
+          <p style="margin:0 0 6px;font-size:19px;font-weight:600;color:#18304A">Tell us what happened</p>
+          <p style="margin:0;font-size:15px;color:#595959">In your own words, in your own language.</p>
+        </div>
+        <div style="background:#FDFBF7;border:1px solid #E4E4E4;border-radius:14px;padding:24px;border-top:3px solid #EECE95">
+          <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#2F5C8A">Step 2</p>
+          <p style="margin:0 0 6px;font-size:19px;font-weight:600;color:#18304A">Read a structured answer</p>
+          <p style="margin:0;font-size:15px;color:#595959">Summary first, steps next, law last.</p>
+        </div>
+        <div style="background:#FDFBF7;border:1px solid #E4E4E4;border-radius:14px;padding:24px;border-top:3px solid #EECE95">
+          <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#2F5C8A">Step 3</p>
+          <p style="margin:0 0 6px;font-size:19px;font-weight:600;color:#18304A">Ask again, or get help</p>
+          <p style="margin:0;font-size:15px;color:#595959">Keep asking, or reach free legal aid.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:#F5EDDD;border-top:1px solid #EECE95;border-bottom:1px solid #EECE95">
+      <div style="max-width:1180px;margin:0 auto;padding:56px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:36px">
+        <div>
+          <h2 style="margin:0 0 12px;font-family:'Source Serif 4',Georgia,serif;font-size:28px;font-weight:600;color:#18304A">What LexGraph is — and is not</h2>
+          <p style="margin:0;max-width:46ch;font-size:16px;color:#595959">We are honest about the line, because the difference matters when you are deciding what to do next.</p>
+        </div>
+        <div style="display:grid;gap:16px">
+          <div style="background:#FFFFFF;border:1px solid #EECE95;border-radius:14px;padding:20px">
+            <p style="margin:0 0 8px;font-size:15px;font-weight:600;color:#18304A">It is legal information</p>
+            <p style="margin:0;font-size:15px;color:#595959">Explanations of what a situation usually means, which law applies, and what people normally do next.</p>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E8B4AF;border-radius:14px;padding:20px">
+            <p style="margin:0 0 8px;font-size:15px;font-weight:600;color:#18304A">It is not a lawyer</p>
+            <p style="margin:0;font-size:15px;color:#595959">No advocate reviews your situation here, nothing you write is filed anywhere, and an AI answer can be incomplete or wrong. For anything with a deadline or a court date, talk to a qualified advocate.</p>
+          </div>
+          <p style="margin:0;font-size:14px;color:#6E6E6E">LexGraph is an independent project. It is not a government service. <a href="#">Read the full terms</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section style="max-width:1180px;margin:0 auto;padding:56px 20px">
+      <h2 style="margin:0 0 8px;font-family:'Source Serif 4',Georgia,serif;font-size:28px;font-weight:600;color:#18304A">Browse by topic</h2>
+      <p style="margin:0 0 24px;font-size:16px;color:#595959">If you would rather read than ask.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+        <sc-for list="{{ topics }}" as="t" hint-placeholder-count="8">
+          <a href="#" style="display:flex;flex-direction:column;justify-content:space-between;min-height:104px;padding:18px;background:#FFFFFF;border:1px solid #D3D3D3;border-radius:14px;text-decoration:none;color:#18304A" style-hover="border-color:#3A6EA5;background:#FDFBF7">
+            <span style="font-size:16px;font-weight:600;line-height:1.35">{{ t.title }}</span>
+            <span style="font-size:13px;color:#6E6E6E">{{ t.count }}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="max-width:1180px;margin:0 auto;padding:0 20px 72px">
+      <div style="background:#18304A;border-radius:20px;padding:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;align-items:center">
+        <div>
+          <p style="margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#EECE95">Need a real person?</p>
+          <h2 style="margin:0 0 10px;font-family:'Source Serif 4',Georgia,serif;font-size:26px;font-weight:600;color:#FFFFFF">Free legal aid exists, and you may qualify</h2>
+          <p style="margin:0;max-width:52ch;font-size:16px;color:#9DBBD8">District Legal Services Authorities provide free lawyers to crores of people who qualify. Most people have never been told this.</p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end">
+          <a href="tel:15100" style="min-height:48px;display:inline-flex;align-items:center;padding:13px 22px;border-radius:10px;background:#EECE95;color:#18304A;font-size:16px;font-weight:600;text-decoration:none" style-hover="background:#E0B871;text-decoration:none">Call 15100 — free</a>
+          <a href="#" style="min-height:48px;display:inline-flex;align-items:center;padding:13px 22px;border-radius:10px;border:1px solid #9DBBD8;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none" style-hover="background:#264468;text-decoration:none">Find help near you</a>
+        </div>
+      </div>
+    </section>
+
+    <footer style="background:#0F1F31;color:#9DBBD8">
+      <div style="max-width:1180px;margin:0 auto;padding:48px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px">
+        <div>
+          <p style="margin:0 0 10px;font-family:'Source Serif 4',Georgia,serif;font-size:19px;font-weight:600;color:#FFFFFF">LexGraph</p>
+          <p style="margin:0;font-size:14px;max-width:34ch">Legal information in six Indian languages. Free, and without an account.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+          <a href="#" style="color:#9DBBD8">Knowledge</a>
+          <a href="#" style="color:#9DBBD8">Find free legal help</a>
+          <a href="#" style="color:#9DBBD8">How it works</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+          <a href="#" style="color:#9DBBD8">Privacy</a>
+          <a href="#" style="color:#9DBBD8">Terms &amp; disclaimer</a>
+          <a href="#" style="color:#9DBBD8">Accessibility statement</a>
+        </div>
+        <div>
+          <p style="margin:0;font-size:13px;line-height:1.6">LexGraph provides legal information, not legal advice, and is not a law firm or a government service. AI answers can be incomplete or wrong. For advice on your situation, consult a qualified advocate.</p>
+        </div>
+      </div>
+    </footer>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+  <main style="flex:1 1 auto;display:flex;min-height:0;max-width:1400px;width:100%;margin:0 auto">
+
+    <sc-if value="{{ showSidebar }}" hint-placeholder-val="{{ false }}">
+    <aside aria-label="Your conversations" style="flex:0 0 272px;border-right:1px solid #E4E4E4;background:#FDFBF7;padding:20px 14px;display:flex;flex-direction:column;gap:14px">
+      <button type="button" onClick="{{ startNew }}" style="min-height:44px;width:100%;border-radius:10px;border:1px solid #2F5C8A;background:#FFFFFF;color:#2F5C8A;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#E8F0F7">+ New conversation</button>
+      <p style="margin:6px 6px 0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6E6E6E">On this device</p>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ history }}" as="h" hint-placeholder-count="3">
+          <button type="button" style="text-align:left;padding:11px 12px;border:0;border-radius:10px;background:{{ h.bg }};color:#18304A;font-size:14px;line-height:1.45;cursor:pointer" style-hover="background:#F2E2C4">
+            <span style="display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.title }}</span>
+            <span style="display:block;font-size:12px;color:#6E6E6E">{{ h.when }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <p style="margin:auto 6px 0;font-size:12px;color:#6E6E6E;line-height:1.55">Kept on this device only. If you share this phone, <a href="#">clear it</a> when you are done.</p>
+    </aside>
+    </sc-if>
+
+    <section style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;background:#FAF6EE">
+
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #E4E4E4;background:#FAF6EE">
+        <button type="button" aria-label="Conversations" onClick="{{ toggleSidebar }}" style="min-height:40px;min-width:40px;border-radius:10px;border:1px solid #D3D3D3;background:#FFFFFF;color:#18304A;cursor:pointer;font-size:15px" style-hover="background:#F5EDDD">☰</button>
+        <div style="flex:1 1 auto;min-width:0">
+          <p style="margin:0;font-size:16px;font-weight:600;color:#18304A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ conversationTitle }}</p>
+          <p style="margin:0;font-size:12px;color:#6E6E6E">Answers in {{ localeLabel }} · Information, not legal advice</p>
+        </div>
+        <button type="button" onClick="{{ startNew }}" style="min-height:40px;padding:9px 14px;border-radius:10px;border:1px solid #D3D3D3;background:#FFFFFF;color:#18304A;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;flex:0 0 auto" style-hover="background:#F5EDDD">New</button>
+      </div>
+
+      <div style="flex:1 1 auto;overflow-y:auto;padding:24px 20px 12px">
+        <div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:26px">
+
+          <sc-if value="{{ isEmptyChat }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:36px 4px">
+            <h1 style="margin:0 0 10px;font-family:'Source Serif 4',Georgia,serif;font-size:30px;font-weight:600;color:#18304A">What is going on?</h1>
+            <p style="margin:0 0 22px;max-width:48ch;font-size:17px;color:#595959">Describe it in your own words. You can start anywhere — the middle of the story is fine.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ examplesShort }}" as="ex" hint-placeholder-count="4">
+                <button type="button" onClick="{{ ex.onPick }}" style="min-height:44px;padding:10px 14px;border-radius:9999px;border:1px solid #D3D3D3;background:#FFFFFF;color:#3F3F3F;font-size:14px;cursor:pointer" style-hover="background:#F2E2C4;border-color:#EECE95;color:#18304A">{{ ex.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <sc-for list="{{ messages }}" as="m" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;gap:10px;animation:lg-in .28s ease both">
+
+              <sc-if value="{{ m.isUser }}" hint-placeholder-val="{{ false }}">
+              <div style="align-self:flex-end;max-width:88%;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                <div style="background:#E8F0F7;border:1px solid #CFDFEC;border-radius:20px;border-bottom-right-radius:8px;padding:14px 18px;font-size:17px;line-height:1.6;color:#2B2B2B;white-space:pre-wrap">{{ m.text }}</div>
+                <sc-if value="{{ m.failed }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:10px;background:#FDF2F1;border:1px solid #E8B4AF;border-radius:10px;padding:8px 12px">
+                    <span style="font-size:13px;color:#B3261E">We could not reach the assistant. Your message is safe.</span>
+                    <button type="button" onClick="{{ m.onRetry }}" style="min-height:36px;padding:7px 12px;border-radius:8px;border:1px solid #B3261E;background:#FFFFFF;color:#B3261E;font-size:13px;font-weight:600;cursor:pointer">Retry</button>
+                  </div>
+                </sc-if>
+              </div>
+              </sc-if>
+
+              <sc-if value="{{ m.isAssistant }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+
+                <sc-if value="{{ m.escalate }}" hint-placeholder-val="{{ false }}">
+                <div role="alert" style="background:#FFFFFF;border:1px solid #EECE95;border-left:5px solid #EECE95;border-radius:14px;padding:20px 22px">
+                  <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8A5A00">Get a person on this first</p>
+                  <p style="margin:0 0 16px;font-size:17px;line-height:1.55;color:#18304A;max-width:52ch">{{ m.escalateLine }}</p>
+                  <div style="display:flex;flex-wrap:wrap;gap:10px">
+                    <a href="tel:15100" style="min-height:48px;display:inline-flex;align-items:center;padding:13px 20px;border-radius:10px;background:#18304A;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none" style-hover="background:#264468;text-decoration:none">Call legal aid — 15100</a>
+                    <a href="tel:112" style="min-height:48px;display:inline-flex;align-items:center;padding:13px 20px;border-radius:10px;border:1px solid #18304A;color:#18304A;font-size:16px;font-weight:600;text-decoration:none" style-hover="background:#F5EDDD;text-decoration:none">Emergency — 112</a>
+                    <a href="#" style="min-height:48px;display:inline-flex;align-items:center;padding:13px 16px;font-size:15px;font-weight:600;color:#2F5C8A;text-decoration:none">Free legal aid near you →</a>
+                  </div>
+                  <p style="margin:16px 0 0;font-size:13px;color:#6E6E6E">The answer below still applies. Reading it can wait until after the call.</p>
+                </div>
+                </sc-if>
+
+                <article style="background:#FDFBF7;border:1px solid #E4E4E4;border-radius:20px;border-top-left-radius:8px;overflow:hidden">
+
+                  <sc-if value="{{ m.uncertain }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:#E8F0F7;border-bottom:1px solid #9DBBD8;padding:12px 22px">
+                    <p style="margin:0;font-size:14px;line-height:1.55;color:#264468">This one is less clear than usual. Please check with a lawyer or your local legal aid office before you act on it.</p>
+                  </div>
+                  </sc-if>
+
+                  <div style="padding:22px 22px 8px;display:flex;flex-direction:column;gap:22px">
+
+                    <sc-if value="{{ m.show1 }}" hint-placeholder-val="{{ true }}">
+                    <div>
+                      <p style="margin:0 0 8px;display:inline-block;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#18304A;background:#EECE95;padding:4px 10px;border-radius:6px">In simple terms</p>
+                      <p style="margin:0;font-size:19px;line-height:1.6;color:#18304A;max-width:64ch;text-wrap:pretty">{{ m.simple }}</p>
+                    </div>
+                    </sc-if>
+
+                    <sc-if value="{{ m.show2 }}" hint-placeholder-val="{{ true }}">
+                    <div style="border-top:1px solid #E4E4E4;padding-top:20px">
+                      <h3 style="margin:0 0 8px;font-size:18px;font-weight:600;color:#18304A">What this usually means</h3>
+                      <p style="margin:0;font-size:16px;line-height:1.7;color:#3F3F3F;max-width:66ch;text-wrap:pretty">{{ m.means }}</p>
+                    </div>
+                    </sc-if>
+
+                    <sc-if value="{{ m.show3 }}" hint-placeholder-val="{{ true }}">
+                    <div style="border-top:1px solid #E4E4E4;padding-top:20px">
+                      <h3 style="margin:0 0 12px;font-size:18px;font-weight:600;color:#18304A">What you can do</h3>
+                      <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;counter-reset:lgstep">
+                        <sc-for list="{{ m.steps }}" as="s" hint-placeholder-count="4">
+                          <li style="display:flex;gap:12px;align-items:flex-start">
+                            <span aria-hidden="true" style="flex:0 0 26px;height:26px;border-radius:9999px;background:#E8F0F7;border:1px solid #CFDFEC;color:#264468;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ s.n }}</span>
+                            <span style="font-size:16px;line-height:1.6;color:#3F3F3F;max-width:62ch">{{ s.text }}</span>
+                          </li>
+                        </sc-for>
+                      </ol>
+                    </div>
+                    </sc-if>
+
+                    <sc-if value="{{ m.show4 }}" hint-placeholder-val="{{ true }}">
+                    <div style="border-top:1px solid #E4E4E4;padding-top:16px">
+                      <button type="button" aria-expanded="{{ m.lawOpen }}" onClick="{{ m.onToggleLaw }}" style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;margin:0 -12px;border:0;background:transparent;border-radius:10px;cursor:pointer;text-align:left" style-hover="background:#F5EDDD">
+                        <span style="font-size:18px;font-weight:600;color:#18304A">The law behind this</span>
+                        <span style="font-size:13px;color:#2F5C8A;font-weight:600">{{ m.lawToggleLabel }}</span>
+                      </button>
+                      <sc-if value="{{ m.lawOpen }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding-top:12px;display:flex;flex-direction:column;gap:14px">
+                        <p style="margin:0;font-size:16px;line-height:1.7;color:#3F3F3F;max-width:66ch">{{ m.law }}</p>
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                          <sc-for list="{{ m.citations }}" as="c" hint-placeholder-count="2">
+                            <div style="display:flex;gap:12px;align-items:baseline;background:#F1F1F1;border:1px solid #E4E4E4;border-radius:10px;padding:12px 14px">
+                              <span style="flex:0 0 auto;font-size:12px;font-weight:600;color:#264468;background:#E8F0F7;border-radius:6px;padding:3px 8px">{{ c.section }}</span>
+                              <span style="font-size:15px;line-height:1.5;color:#3F3F3F">{{ c.title }}</span>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </div>
+                      </sc-if>
+                    </div>
+                    </sc-if>
+
+                    <sc-if value="{{ m.show5 }}" hint-placeholder-val="{{ true }}">
+                    <div style="border-top:1px solid #E4E4E4;padding-top:20px;padding-bottom:6px">
+                      <h3 style="margin:0 0 8px;font-size:18px;font-weight:600;color:#18304A">When to talk to a lawyer</h3>
+                      <p style="margin:0;font-size:16px;line-height:1.7;color:#3F3F3F;max-width:66ch;text-wrap:pretty">{{ m.lawyer }}</p>
+                    </div>
+                    </sc-if>
+
+                  </div>
+
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#F5EDDD;border-top:1px solid #E4E4E4;padding:12px 22px">
+                    <p style="margin:0;font-size:12px;font-weight:500;color:#6E6E6E">Information, not legal advice</p>
+                    <div style="display:flex;gap:6px;align-items:center">
+                      <button type="button" onClick="{{ m.onCopy }}" style="min-height:38px;padding:8px 12px;border-radius:8px;border:1px solid #D3D3D3;background:#FFFFFF;color:#18304A;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#FDFBF7;border-color:#3A6EA5">{{ m.copyLabel }}</button>
+                      <button type="button" aria-label="This helped" onClick="{{ m.onUp }}" style="min-height:38px;min-width:38px;border-radius:8px;border:1px solid {{ m.upBorder }};background:{{ m.upBg }};color:#18304A;font-size:13px;cursor:pointer">Helpful</button>
+                      <button type="button" aria-label="This did not help" onClick="{{ m.onDown }}" style="min-height:38px;min-width:38px;border-radius:8px;border:1px solid {{ m.downBorder }};background:{{ m.downBg }};color:#18304A;font-size:13px;cursor:pointer">Not helpful</button>
+                    </div>
+                  </div>
+                </article>
+
+                <sc-if value="{{ m.showSuggestions }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <p style="margin:0 0 8px;font-size:13px;font-weight:500;color:#6E6E6E">People usually ask next</p>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <sc-for list="{{ m.suggestions }}" as="q" hint-placeholder-count="3">
+                      <button type="button" onClick="{{ q.onPick }}" style="min-height:44px;padding:10px 16px;border-radius:9999px;border:1px solid #CFDFEC;background:#FFFFFF;color:#264468;font-size:14px;font-weight:500;cursor:pointer;text-align:left" style-hover="background:#E8F0F7;border-color:#2F5C8A">{{ q.text }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                </sc-if>
+
+              </div>
+              </sc-if>
+
+            </div>
+          </sc-for>
+
+          <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+          <div aria-live="polite" style="display:flex;align-items:center;gap:12px;padding:16px 20px;background:#FDFBF7;border:1px solid #E4E4E4;border-radius:20px;border-top-left-radius:8px;align-self:flex-start">
+            <span aria-hidden="true" style="display:inline-flex;gap:4px">
+              <span style="width:7px;height:7px;border-radius:9999px;background:#2F5C8A;animation:lg-dot 1.2s infinite"></span>
+              <span style="width:7px;height:7px;border-radius:9999px;background:#2F5C8A;animation:lg-dot 1.2s .15s infinite"></span>
+              <span style="width:7px;height:7px;border-radius:9999px;background:#2F5C8A;animation:lg-dot 1.2s .3s infinite"></span>
+            </span>
+            <span style="font-size:15px;color:#595959">{{ loadingCopy }}</span>
+          </div>
+          </sc-if>
+
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #E4E4E4;background:#FAF6EE;padding:12px 20px 18px">
+        <div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
+
+          <sc-if value="{{ needsConsent }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFFFFF;border:1px solid #EECE95;border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+            <p style="margin:0;max-width:60ch;font-size:14px;line-height:1.6;color:#3F3F3F">Before you start: this is an AI assistant that explains the law in plain words. It is not a lawyer, nothing you write is filed anywhere, and it can be wrong. Please do not enter Aadhaar, account or case numbers.</p>
+            <button type="button" onClick="{{ acceptConsent }}" style="min-height:44px;padding:11px 20px;border-radius:10px;border:0;background:#18304A;color:#FFFFFF;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#264468">I understand</button>
+          </div>
+          </sc-if>
+
+          <div style="background:#FFFFFF;border:1px solid #D3D3D3;border-radius:20px;padding:12px 14px;box-shadow:0 10px 28px -20px rgba(24,48,74,.4)">
+            <label for="composer" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Ask a follow-up question</label>
+            <textarea id="composer" rows="2" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="Ask a follow-up, or describe something new…" style="width:100%;resize:none;border:0;outline:none;background:transparent;font-size:17px;line-height:1.6;color:#3F3F3F;padding:4px 2px 8px"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <p style="margin:0;font-size:12px;color:#6E6E6E">Enter to send · Shift + Enter for a new line</p>
+              <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+                <button type="button" onClick="{{ stop }}" style="min-height:44px;padding:11px 18px;border-radius:10px;border:1px solid #D3D3D3;background:#FFFFFF;color:#3F3F3F;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#F5EDDD">Stop</button>
+              </sc-if>
+              <sc-if value="{{ canSend }}" hint-placeholder-val="{{ true }}">
+                <button type="button" onClick="{{ submitDraft }}" style="min-height:44px;padding:11px 20px;border-radius:10px;border:0;background:#2F5C8A;color:#FFFFFF;font-size:15px;font-weight:600;cursor:pointer" style-hover="background:#264468">Send</button>
+              </sc-if>
+            </div>
+          </div>
+
+          <sc-if value="{{ piiHint }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:13px;color:#8A5A00">That looks like a number you may not want to share. You can remove it — the answer will be the same.</p>
+          </sc-if>
+
+          <p style="margin:0;font-size:12px;color:#6E6E6E;text-align:center">LexGraph gives legal information, not legal advice, and is not a government service. <a href="#">Terms</a> · <a href="#">Privacy</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:100;background:rgba(12,24,38,.55);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
+    <div role="dialog" aria-modal="true" aria-labelledby="lang-title" style="width:100%;max-width:620px;margin:auto;background:#FFFFFF;border-radius:20px;box-shadow:0 20px 48px -12px rgba(12,24,38,.28);padding:28px;position:relative;animation:lg-in .3s ease both">
+      <button type="button" aria-label="Close and continue in English" onClick="{{ dismissModal }}" style="position:absolute;top:16px;right:16px;min-height:40px;min-width:40px;border-radius:10px;border:1px solid #E4E4E4;background:#FFFFFF;color:#3F3F3F;font-size:15px;cursor:pointer" style-hover="background:#F5EDDD">✕</button>
+      <h2 id="lang-title" style="margin:0 0 6px;font-family:'Source Serif 4',Georgia,serif;font-size:26px;font-weight:600;color:#18304A">Choose your language</h2>
+      <p style="margin:0 0 20px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:#6E6E6E">
+        <span style="font-family:'Noto Sans Devanagari',Inter,sans-serif">अपनी भाषा चुनें</span>
+        <span style="font-family:'Noto Sans Tamil',Inter,sans-serif">உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்</span>
+        <span style="font-family:'Noto Sans Telugu',Inter,sans-serif">మీ భాషను ఎంచుకోండి</span>
+        <span style="font-family:'Noto Sans Bengali',Inter,sans-serif">আপনার ভাষা নির্বাচন করুন</span>
+        <span style="font-family:'Noto Sans Kannada',Inter,sans-serif">ನಿಮ್ಮ ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ</span>
+      </p>
+      <div role="radiogroup" aria-labelledby="lang-title" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+        <sc-for list="{{ languages }}" as="lang" hint-placeholder-count="6">
+          <button type="button" role="radio" aria-checked="{{ lang.picked }}" onClick="{{ lang.onPick }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:72px;padding:14px 16px;border:{{ lang.cardBorder }};border-radius:14px;background:{{ lang.cardBg }};cursor:pointer;text-align:left" style-hover="border-color:#5C8BBE;background:#FAF6EE">
+            <span style="display:flex;flex-direction:column;gap:2px">
+              <span style="font-family:{{ lang.font }};font-size:18px;font-weight:600;color:#18304A;line-height:1.35">{{ lang.native }}</span>
+              <span style="font-size:14px;color:#6E6E6E">{{ lang.latin }}</span>
+            </span>
+            <span aria-hidden="true" style="flex:0 0 22px;height:22px;border-radius:9999px;border:{{ lang.dotBorder }};background:{{ lang.dotBg }};display:flex;align-items:center;justify-content:center;color:#FFFFFF;font-size:12px;font-weight:700">{{ lang.tick }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <button type="button" onClick="{{ confirmLocale }}" style="margin-top:22px;width:100%;min-height:52px;border-radius:12px;border:0;background:#2F5C8A;color:#FFFFFF;font-size:17px;font-weight:600;cursor:pointer;font-family:{{ ctaFont }}" style-hover="background:#264468">{{ ctaLabel }}</button>
+      <p style="margin:14px 0 0;text-align:center;font-size:13px;color:#6E6E6E">You can change this any time from the top of the page.</p>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;heroVariant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;default&quot;:&quot;a&quot;,&quot;tsType&quot;:&quot;'a' | 'b'&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;escalationTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;calm&quot;,&quot;urgent&quot;],&quot;default&quot;:&quot;calm&quot;,&quot;tsType&quot;:&quot;'calm' | 'urgent'&quot;,&quot;section&quot;:&quot;Assistant&quot;},&quot;demoFailure&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Assistant&quot;},&quot;showLanguageModal&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Language&quot;}}">
+const LANGS = [
+  { code: "en", native: "English", latin: "English", font: "Inter,sans-serif", cta: "Get Started" },
+  { code: "hi", native: "हिंदी", latin: "Hindi", font: "'Noto Sans Devanagari',Inter,sans-serif", cta: "शुरू करें" },
+  { code: "ta", native: "தமிழ்", latin: "Tamil", font: "'Noto Sans Tamil',Inter,sans-serif", cta: "தொடங்குங்கள்" },
+  { code: "te", native: "తెలుగు", latin: "Telugu", font: "'Noto Sans Telugu',Inter,sans-serif", cta: "ప్రారంభించండి" },
+  { code: "bn", native: "বাংলা", latin: "Bengali", font: "'Noto Sans Bengali',Inter,sans-serif", cta: "শুরু করুন" },
+  { code: "kn", native: "ಕನ್ನಡ", latin: "Kannada", font: "'Noto Sans Kannada',Inter,sans-serif", cta: "ಪ್ರಾರಂಭಿಸಿ" }
+];
+
+const EXAMPLES = [
+  "My landlord sent me a notice on WhatsApp",
+  "Police won't register my FIR",
+  "My employer hasn't paid my salary",
+  "I bought a defective product",
+  "Police detained my brother last night",
+  "My landlord is threatening to cut my water"
+];
+
+const TOPICS = [
+  { title: "Housing & tenancy", count: "24 articles" },
+  { title: "Police & FIR", count: "18 articles" },
+  { title: "Employment & wages", count: "21 articles" },
+  { title: "Consumer complaints", count: "16 articles" },
+  { title: "Family & marriage", count: "19 articles" },
+  { title: "Women's safety", count: "12 articles" },
+  { title: "Cyber fraud & scams", count: "14 articles" },
+  { title: "Documents & IDs", count: "9 articles" }
+];
+
+// MOCK ANSWER CORPUS — stands in for the backend until the API contract exists.
+// See README §11.2: the frontend needs these fields under *some* name.
+const ANSWERS = {
+  tenancy: {
+    simple: "A notice from your landlord is not an eviction. It is a formal demand, and it starts a clock — but you cannot be removed from your home without a proper legal process.",
+    means: "Tenancy is largely a state subject, so the exact rules depend on where you live and on what your agreement says. In most states a notice to vacate has to state a reason, give you a minimum period, and reach you in a way the law recognises. A message on WhatsApp may or may not count as valid service depending on your state and your agreement — that question alone often changes the outcome.",
+    steps: [
+      "Save the message. Screenshot it with the date and the sender's number visible, and back it up somewhere off the phone.",
+      "Find your rent agreement and check the notice period written in it.",
+      "Reply in writing that you have received the notice and are asking for the reason and the period. Keep a copy.",
+      "Keep paying rent by bank transfer or UPI, not cash, so there is a record.",
+      "Call the free legal aid helpline on 15100 and ask for the tenancy desk at your District Legal Services Authority."
+    ],
+    law: "Where no state rent-control law applies, the notice period for ending a lease comes from the Transfer of Property Act. Most states also have their own Rent Control Act, which can override it and is usually more protective of the tenant. Eviction itself requires an order — a landlord acting without one is acting outside the law.",
+    citations: [
+      { section: "s. 106", title: "Transfer of Property Act, 1882 — duration and termination of leases by notice" },
+      { section: "State Act", title: "Your state's Rent Control Act — grounds for eviction and notice requirements" }
+    ],
+    lawyer: "Talk to an advocate now if the notice claims rent arrears you disagree with, if you have received anything from a court, or if you are being pressured to leave within days. Free legal aid on 15100 covers this, and there is no income test for the first consultation in most districts.",
+    suggestions: ["What if I only got it on WhatsApp?", "How much notice must they give me?", "Can they cut off my water or power?"]
+  },
+  police: {
+    simple: "A person in police custody has rights that apply from the moment they are picked up — including being told the reason, informing a family member, and meeting a lawyer. The most useful thing you can do right now is get legal aid on the phone.",
+    means: "The police must record an arrest, inform a relative or friend, and produce the person before a magistrate within 24 hours. Free legal representation is a right, not a favour, and the legal aid authority can send an advocate to the station. Custody questions move fast, which is why the call matters more than the reading.",
+    steps: [
+      "Call 15100 now and say a family member is in police custody. Ask for a duty advocate.",
+      "Write down the station name, the officer's name, and the time he was taken.",
+      "Ask at the station for the arrest memo and the case or FIR number, and note who refuses.",
+      "Do not sign anything you have not read, and do not let him sign a blank page.",
+      "Note the 24-hour deadline for production before a magistrate from the time of arrest."
+    ],
+    law: "The Constitution guarantees that an arrested person is told the grounds of arrest and is produced before a magistrate within twenty-four hours, and guarantees the right to consult a lawyer. The Supreme Court's arrest guidelines add specific duties on the police, including notifying a relative and preparing an arrest memo.",
+    citations: [
+      { section: "Art. 22", title: "Constitution of India — protection against arrest and detention" },
+      { section: "Guidelines", title: "D.K. Basu v. State of West Bengal (1997) — mandatory arrest procedure" }
+    ],
+    lawyer: "This is a situation for a lawyer, today, not for reading. Legal aid on 15100 is free and can act tonight. If you are told he cannot meet a lawyer, say so on that call — it is itself a problem.",
+    suggestions: ["Can I meet him at the station?", "What is an arrest memo?", "What happens after 24 hours?"]
+  },
+  wages: {
+    simple: "Unpaid wages are recoverable, and there is a specific authority for it — you do not have to go to a regular court first. The claim gets harder the longer you wait, so the date matters.",
+    means: "Wage claims are handled by labour authorities under wage and industrial-dispute law, and the process is designed to work without a lawyer. What you need most is proof of the employment relationship and of the amount owed: appointment letter, ID card, roster, bank credits, or even a WhatsApp thread with a supervisor.",
+    steps: [
+      "List the exact months and amounts owed, and gather anything that shows you worked there.",
+      "Send one written demand to the employer — a WhatsApp message is fine — and keep the delivery record.",
+      "File a claim with the Labour Commissioner's office for your area. There is no fee.",
+      "Call 15100 if you want a free advocate to prepare the claim with you."
+    ],
+    law: "Wage payment timelines and deductions are governed by the Code on Wages and the Payment of Wages Act it consolidates. Disputes over unpaid wages can be raised before the authority appointed under that law, and there are limitation periods that make delay costly.",
+    citations: [
+      { section: "Code, 2019", title: "Code on Wages, 2019 — timely payment of wages and claims procedure" },
+      { section: "s. 15", title: "Payment of Wages Act, 1936 — claims for deducted or delayed wages" }
+    ],
+    lawyer: "Talk to a lawyer if the employer denies you ever worked there, if you were also injured or dismissed, or if the amount is large enough that you would want the claim drafted properly.",
+    suggestions: ["I have no appointment letter", "How long do I have to file?", "Can they fire me for complaining?"]
+  }
+};
+
+const HIGH_RISK = ["police", "arrest", "detain", "custody", "bail", "fir", "violence", "beat", "hit me", "threat", "danger", "abuse", "minor", "harm myself"];
+const LADDER = [
+  { at: 0, copy: "Reading your question…" },
+  { at: 2600, copy: "Looking through the relevant law…" },
+  { at: 7000, copy: "Still working — this one's taking a moment." }
+];
+
+class Component extends DCLogic {
+  state = {
+    view: "landing",
+    locale: "en",
+    highlighted: "en",
+    modalOpen: true,
+    consented: false,
+    draft: "",
+    messages: [],
+    thinking: false,
+    loadingCopy: "Reading your question…",
+    sidebarOpen: false,
+    isWide: true,
+    langMenu: false,
+    openLaw: {},
+    feedback: {},
+    copied: {},
+    title: "New conversation",
+    seq: 0
+  };
+
+  _timers = [];
+
+  componentDidMount() {
+    this._onResize = () => this.setState({ isWide: window.innerWidth >= 1024 });
+    window.addEventListener("resize", this._onResize);
+    this._onResize();
+    let stored = null;
+    try { stored = window.localStorage.getItem("lexgraph.locale"); } catch (e) { stored = null; }
+    const show = this.props.showLanguageModal !== false;
+    if (stored && LANGS.some(l => l.code === stored)) {
+      this.setState({ locale: stored, highlighted: stored, modalOpen: false });
+      document.documentElement.setAttribute("lang", stored);
+    } else {
+      this.setState({ modalOpen: show });
+    }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this._onResize);
+    this._clear();
+  }
+
+  _clear() { this._timers.forEach(clearTimeout); this._timers = []; }
+  _later(fn, ms) { this._timers.push(setTimeout(fn, ms)); }
+
+  pickLocale = (code) => this.setState({ highlighted: code });
+
+  confirmLocale = () => {
+    const code = this.state.highlighted;
+    try { window.localStorage.setItem("lexgraph.locale", code); } catch (e) {}
+    document.documentElement.setAttribute("lang", code);
+    this.setState({ locale: code, modalOpen: false });
+  };
+
+  dismissModal = () => {
+    try { window.localStorage.setItem("lexgraph.locale", "en"); } catch (e) {}
+    this.setState({ modalOpen: false, locale: "en", highlighted: "en" });
+  };
+
+  toggleLangMenu = () => this.setState(s => ({ langMenu: !s.langMenu }));
+
+  setLocale = (code) => {
+    try { window.localStorage.setItem("lexgraph.locale", code); } catch (e) {}
+    document.documentElement.setAttribute("lang", code);
+    this.setState({ locale: code, highlighted: code, langMenu: false });
+  };
+
+  goHome = (e) => { if (e) e.preventDefault(); this.setState({ view: "landing", langMenu: false }); };
+  startNew = () => { this._clear(); this.setState({ view: "chat", messages: [], thinking: false, draft: "", title: "New conversation", langMenu: false }); };
+  toggleSidebar = () => this.setState(s => ({ sidebarOpen: !s.sidebarOpen }));
+  acceptConsent = () => this.setState({ consented: true });
+  onDraft = (e) => this.setState({ draft: e.target.value });
+  onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); this.send(this.state.draft); } };
+  submitDraft = () => this.send(this.state.draft);
+  stop = () => { this._clear(); this.setState({ thinking: false }); };
+
+  toggleLaw = (id) => this.setState(s => ({ openLaw: Object.assign({}, s.openLaw, { [id]: !s.openLaw[id] }) }));
+  rate = (id, v) => this.setState(s => ({ feedback: Object.assign({}, s.feedback, { [id]: v }) }));
+
+  copyAnswer = (id) => {
+    const m = this.state.messages.find(x => x.id === id);
+    if (!m) return;
+    const steps = m.answer.steps.map((t, i) => (i + 1) + ". " + t).join("\n");
+    const text = ["In simple terms\n" + m.answer.simple, "What this usually means\n" + m.answer.means,
+      "What you can do\n" + steps, "The law behind this\n" + m.answer.law,
+      "When to talk to a lawyer\n" + m.answer.lawyer,
+      "— LexGraph gives legal information, not legal advice. It is not a lawyer and not a government service."].join("\n\n");
+    try { navigator.clipboard.writeText(text); } catch (e) {}
+    this.setState(s => ({ copied: Object.assign({}, s.copied, { [id]: true }) }));
+    this._later(() => this.setState(s => ({ copied: Object.assign({}, s.copied, { [id]: false }) })), 2200);
+  };
+
+  _pickAnswer(text) {
+    const t = text.toLowerCase();
+    if (/police|fir|arrest|detain|custody|bail/.test(t)) return { key: "police", a: ANSWERS.police };
+    if (/salary|wage|paid|employer|job|fired/.test(t)) return { key: "wages", a: ANSWERS.wages };
+    return { key: "tenancy", a: ANSWERS.tenancy };
+  }
+
+  send = (raw) => {
+    const text = (raw || "").trim();
+    if (!text || this.state.thinking) return;
+    this._clear();
+    const n = this.state.seq + 1;
+    const userId = "u" + n;
+    const botId = "a" + n;
+    const risk = HIGH_RISK.some(k => text.toLowerCase().includes(k));
+    const picked = this._pickAnswer(text);
+
+    this.setState(s => ({
+      view: "chat",
+      seq: n,
+      draft: "",
+      thinking: true,
+      loadingCopy: LADDER[0].copy,
+      title: s.messages.length ? s.title : (text.length > 46 ? text.slice(0, 46) + "…" : text),
+      messages: s.messages.concat([{ id: userId, role: "user", text: text, failed: false }])
+    }));
+
+    LADDER.slice(1).forEach(step => this._later(() => this.setState({ loadingCopy: step.copy }), step.at));
+
+    if (this.props.demoFailure) {
+      this._later(() => this.setState(s => ({
+        thinking: false,
+        messages: s.messages.map(m => m.id === userId ? Object.assign({}, m, { failed: true }) : m)
+      })), 2200);
+      return;
+    }
+
+    this._later(() => {
+      this.setState(s => ({
+        thinking: false,
+        messages: s.messages.map(m => m.id === userId ? Object.assign({}, m, { failed: false }) : m)
+          .concat([{ id: botId, role: "assistant", answer: picked.a, escalate: risk, reveal: 1, uncertain: picked.key === "wages", done: false, lastText: text }])
+      }));
+      [2, 3, 4, 5].forEach((r, i) => this._later(() => this.setState(s => ({
+        messages: s.messages.map(m => m.id === botId ? Object.assign({}, m, { reveal: r, done: r === 5 }) : m)
+      })), 480 * (i + 1)));
+    }, 2200);
+  };
+
+  retry = (userId) => {
+    const m = this.state.messages.find(x => x.id === userId);
+    if (!m) return;
+    this.setState(s => ({ messages: s.messages.filter(x => x.id !== userId) }), () => this.send(m.text));
+  };
+
+  renderVals() {
+    const s = this.state;
+    const variant = this.props.heroVariant || "a";
+    const tone = this.props.escalationTone || "calm";
+    const active = LANGS.find(l => l.code === s.locale) || LANGS[0];
+    const highlighted = LANGS.find(l => l.code === s.highlighted) || LANGS[0];
+
+    const messages = s.messages.map(m => {
+      if (m.role === "user") {
+        return { isUser: true, isAssistant: false, text: m.text, failed: !!m.failed, onRetry: () => this.retry(m.id) };
+      }
+      const a = m.answer;
+      const lawOpen = !!s.openLaw[m.id];
+      const fb = s.feedback[m.id];
+      return {
+        isUser: false, isAssistant: true,
+        simple: a.simple, means: a.means, law: a.law, lawyer: a.lawyer,
+        steps: a.steps.map((t, i) => ({ n: i + 1, text: t })),
+        citations: a.citations,
+        show1: m.reveal >= 1, show2: m.reveal >= 2, show3: m.reveal >= 3, show4: m.reveal >= 4, show5: m.reveal >= 5,
+        lawOpen: lawOpen,
+        lawToggleLabel: lawOpen ? "Hide" : "Show Act & section",
+        onToggleLaw: () => this.toggleLaw(m.id),
+        escalate: !!m.escalate,
+        escalateLine: tone === "urgent"
+          ? "This sounds urgent. Free legal aid can act on a custody matter tonight — call before you read anything else."
+          : "This sounds like something a person should help with directly. Free legal aid is available now, at no cost.",
+        uncertain: !!m.uncertain,
+        onCopy: () => this.copyAnswer(m.id),
+        copyLabel: s.copied[m.id] ? "Copied, with the disclaimer" : "Copy answer",
+        onUp: () => this.rate(m.id, "up"),
+        onDown: () => this.rate(m.id, "down"),
+        upBg: fb === "up" ? "#EEF7F1" : "#FFFFFF",
+        upBorder: fb === "up" ? "#1B7A4B" : "#D3D3D3",
+        downBg: fb === "down" ? "#FDF2F1" : "#FFFFFF",
+        downBorder: fb === "down" ? "#B3261E" : "#D3D3D3",
+        showSuggestions: m.done,
+        suggestions: a.suggestions.map(q => ({ text: q, onPick: () => this.send(q) }))
+      };
+    });
+
+    return {
+      isLanding: s.view === "landing",
+      isChat: s.view === "chat",
+      heroA: variant === "a",
+      heroB: variant === "b",
+      heroPlaceholder: "e.g. My landlord sent me a notice on WhatsApp asking me to leave in 10 days. My rent is paid.",
+      draft: s.draft,
+      onDraft: this.onDraft,
+      onKey: this.onKey,
+      submitDraft: this.submitDraft,
+      goHome: this.goHome,
+      startNew: this.startNew,
+      examples: EXAMPLES.map(t => ({ label: t, onPick: () => this.send(t) })),
+      examplesShort: EXAMPLES.slice(0, 4).map(t => ({ label: t, onPick: () => this.send(t) })),
+      topics: TOPICS,
+      localeLabel: active.native,
+      langMenu: s.langMenu,
+      toggleLangMenu: this.toggleLangMenu,
+      languages: LANGS.map(l => ({
+        native: l.native, latin: l.latin, font: l.font,
+        picked: l.code === s.highlighted,
+        active: l.code === s.locale,
+        cardBg: l.code === s.highlighted ? "#E8F0F7" : "#FFFFFF",
+        cardBorder: l.code === s.highlighted ? "2px solid #2F5C8A" : "1px solid #D3D3D3",
+        dotBg: l.code === s.highlighted ? "#2F5C8A" : "#FFFFFF",
+        dotBorder: l.code === s.highlighted ? "2px solid #2F5C8A" : "1px solid #D3D3D3",
+        tick: l.code === s.highlighted ? "✓" : "",
+        menuBg: l.code === s.locale ? "#E8F0F7" : "transparent",
+        onPick: () => (s.modalOpen ? this.pickLocale(l.code) : this.setLocale(l.code))
+      })),
+      ctaLabel: highlighted.cta,
+      ctaFont: highlighted.font,
+      modalOpen: s.modalOpen,
+      confirmLocale: this.confirmLocale,
+      dismissModal: this.dismissModal,
+      messages: messages,
+      isEmptyChat: s.messages.length === 0 && !s.thinking,
+      thinking: s.thinking,
+      canSend: !s.thinking,
+      loadingCopy: s.loadingCopy,
+      stop: this.stop,
+      needsConsent: !s.consented,
+      acceptConsent: this.acceptConsent,
+      piiHint: /\d{6,}/.test(s.draft),
+      conversationTitle: s.title,
+      showSidebar: s.isWide ? s.sidebarOpen : false,
+      toggleSidebar: this.toggleSidebar,
+      history: [
+        { title: "Landlord notice on WhatsApp", when: "Just now", bg: "#F2E2C4" },
+        { title: "Salary unpaid for two months", when: "Yesterday", bg: "transparent" },
+        { title: "Defective phone, shop refuses", when: "Last week", bg: "transparent" }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>
