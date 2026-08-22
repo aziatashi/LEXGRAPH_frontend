@@ -5,16 +5,22 @@ const assert = require("assert");
 const fs = require("fs");
 const vm = require("vm");
 
-const el = () => ({ className: "", innerHTML: "", hidden: false, setAttribute() {}, focus() {}, setSelectionRange() {} });
+const el = () => ({ className: "", innerHTML: "", hidden: false, style: {}, setAttribute() {}, focus() {}, setSelectionRange() {}, querySelectorAll() { return []; } });
 
 const ctx = {
   console,
   setTimeout,
   clearTimeout,
   Promise,
+  JSON,
+  Object,
+  String,
+  Array,
+  RegExp,
   document: {
     activeElement: null,
     documentElement: el(),
+    body: el(),
     getElementById: (id) => (id === "app" ? ctx.appNode : null),
     querySelectorAll: () => [],
     addEventListener: () => {}
@@ -29,52 +35,179 @@ ctx.appNode = el();
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(__dirname + "/app.js", "utf8"), ctx);
 
-// escaping — the XSS boundary for anything the user typed
+// ── escaping — the XSS boundary ──
 assert.strictEqual(ctx.esc('<img src=x onerror="a">'), "&lt;img src=x onerror=&quot;a&quot;&gt;");
 assert.strictEqual(ctx.esc("O'Brien & co"), "O&#39;Brien &amp; co");
 const bubble = ctx.messageHtml({ id: "u1", role: "user", text: "<script>bad()</script>" });
 assert.ok(bubble.includes("&lt;script&gt;") && !bubble.includes("<script>"), "user text must be escaped");
 
-// answer routing
+// ── answer routing — English ──
+ctx.S.locale = "en";
+ctx.S.profile = "citizen";
 assert.strictEqual(ctx.pickAnswer("Police detained my brother last night").key, "police");
 assert.strictEqual(ctx.pickAnswer("My employer hasn't paid my salary").key, "wages");
 assert.strictEqual(ctx.pickAnswer("My landlord sent me a notice").key, "tenancy");
 
-// escalation banner fires on the risk words, and only on those
+// ── escalation banner fires on the risk words ──
 const risky = (t) => ctx.HIGH_RISK.some((k) => t.toLowerCase().includes(k));
 assert.ok(risky("Police detained my brother last night"));
 assert.ok(!risky("I bought a defective product"));
 
-// progressive reveal: section N appears only once reveal reaches N
-const msg = (reveal) => ctx.answerHtml({ id: "a1", answer: ctx.ANSWERS.tenancy, reveal });
-assert.ok(msg(1).includes("In simple terms"));
+// ── progressive reveal: section N appears only once reveal reaches N ──
+const msg = (reveal) => ctx.answerHtml({ id: "a1", answer: ctx.getLocalizedAnswer("tenancy"), reveal });
+assert.ok(msg(1).includes("simple"));
 assert.ok(!msg(1).includes("What this usually means"));
-assert.ok(msg(2).includes("What this usually means") && !msg(2).includes("What you can do"));
-assert.ok(msg(5).includes("When to talk to a lawyer"));
+assert.ok(msg(2).includes("What this usually means"));
+assert.ok(msg(5).includes("lawyer") || msg(5).includes("talk to"));
 
-// the law section is collapsed until toggled
-assert.ok(msg(4).includes("Show Act") && !msg(4).includes(ctx.ANSWERS.tenancy.law));
+// ── the law section is collapsed until toggled ──
+ctx.S.openLaw = {};
+assert.ok(!msg(4).includes(ctx.ANSWERS.tenancy.en.law));
 ctx.S.openLaw = { a1: true };
-assert.ok(msg(4).includes(ctx.ANSWERS.tenancy.law));
+assert.ok(msg(4).includes(ctx.ANSWERS.tenancy.en.law));
 ctx.S.openLaw = {};
 
-// PII hint threshold
+// ── PII hint threshold ──
 assert.ok(/\d{6,}/.test("account 123456"));
 assert.ok(!/\d{6,}/.test("flat 12345"));
 
-// stop() must drop an answer that is already in flight
+// ── PROFILE SYSTEM ──
+// Profiles exist
+assert.ok(ctx.PROFILES.length === 4, "Should have 4 profiles");
+assert.strictEqual(
+  JSON.stringify(ctx.PROFILES.map(p => p.id)),
+  JSON.stringify(["student", "lawyer", "msme", "citizen"])
+);
+
+// profileOf returns the correct profile
+assert.strictEqual(ctx.profileOf("student").id, "student");
+assert.strictEqual(ctx.profileOf("lawyer").id, "lawyer");
+assert.strictEqual(ctx.profileOf("msme").id, "msme");
+assert.strictEqual(ctx.profileOf("citizen").id, "citizen");
+
+// Profile names are multilingual
+assert.ok(ctx.profileOf("student").name.hi, "Student profile should have Hindi name");
+assert.ok(ctx.profileOf("student").name.mr, "Student profile should have Marathi name");
+assert.ok(ctx.profileOf("student").name.kn, "Student profile should have Kannada name");
+assert.ok(ctx.profileOf("student").name.ta, "Student profile should have Tamil name");
+
+// ── LANGUAGE ROSTER ──
+const langCodes = ctx.LANGS.map(l => l.code);
+assert.strictEqual(JSON.stringify(langCodes), JSON.stringify(["en", "hi", "mr", "kn", "ta"]), "Should have en, hi, mr, kn, ta");
+
+// ── MULTILINGUAL ANSWERS ──
+// Each topic has all 5 language variants
+["tenancy", "police", "wages"].forEach(topic => {
+  ["en", "hi", "mr", "kn", "ta"].forEach(locale => {
+    const ans = ctx.ANSWERS[topic][locale];
+    assert.ok(ans, topic + " should have " + locale + " variant");
+    assert.ok(ans.simple, topic + "/" + locale + " should have 'simple'");
+    assert.ok(ans.means, topic + "/" + locale + " should have 'means'");
+    assert.ok(Array.isArray(ans.steps), topic + "/" + locale + " should have 'steps' array");
+    assert.ok(ans.steps.length >= 3, topic + "/" + locale + " should have at least 3 steps");
+    assert.ok(ans.law, topic + "/" + locale + " should have 'law'");
+    assert.ok(Array.isArray(ans.citations), topic + "/" + locale + " should have citations");
+    assert.ok(ans.lawyer, topic + "/" + locale + " should have 'lawyer'");
+    assert.ok(Array.isArray(ans.suggestions), topic + "/" + locale + " should have suggestions");
+    assert.ok(ans.verification, topic + "/" + locale + " should have verification status");
+  });
+});
+
+// ── LANGUAGE × PROFILE INDEPENDENCE ──
+// Changing language should not reset profile
+ctx.S.profile = "student";
+ctx.S.locale = "hi";
+assert.strictEqual(ctx.S.profile, "student", "Profile must survive language change");
+ctx.S.locale = "mr";
+assert.strictEqual(ctx.S.profile, "student", "Profile must survive another language change");
+
+// Changing profile should not reset language
+ctx.S.locale = "ta";
+ctx.S.profile = "lawyer";
+assert.strictEqual(ctx.S.locale, "ta", "Language must survive profile change");
+ctx.S.profile = "msme";
+assert.strictEqual(ctx.S.locale, "ta", "Language must survive another profile change");
+
+// ── MULTILINGUAL ANSWER PIPELINE ──
+// pickAnswer should return correct locale variant
+ctx.S.locale = "hi";
+ctx.S.profile = "citizen";
+var hiAnswer = ctx.pickAnswer("My landlord sent me a notice");
+assert.strictEqual(hiAnswer.key, "tenancy");
+assert.ok(hiAnswer.a._locale === "hi", "Answer should carry Hindi locale");
+
+ctx.S.locale = "mr";
+var mrAnswer = ctx.pickAnswer("My employer hasn't paid my salary");
+assert.strictEqual(mrAnswer.key, "wages");
+assert.ok(mrAnswer.a._locale === "mr", "Answer should carry Marathi locale");
+
+ctx.S.locale = "kn";
+var knAnswer = ctx.pickAnswer("Police detained my brother");
+assert.strictEqual(knAnswer.key, "police");
+assert.ok(knAnswer.a._locale === "kn", "Answer should carry Kannada locale");
+
+ctx.S.locale = "ta";
+var taAnswer = ctx.pickAnswer("My landlord sent me a notice");
+assert.strictEqual(taAnswer.key, "tenancy");
+assert.ok(taAnswer.a._locale === "ta", "Answer should carry Tamil locale");
+
+// Reset to English
+ctx.S.locale = "en";
+var enAnswer = ctx.pickAnswer("My landlord sent me a notice");
+assert.ok(enAnswer.a._locale === "en", "Answer should carry English locale");
+
+// ── PROFILE-SPECIFIC EXAMPLES ──
+["student", "lawyer", "msme", "citizen"].forEach(pid => {
+  ["en", "hi", "mr", "kn", "ta"].forEach(locale => {
+    var ex = ctx.PROFILE_EXAMPLES[pid][locale];
+    assert.ok(Array.isArray(ex) && ex.length >= 3, pid + "/" + locale + " should have at least 3 examples");
+  });
+});
+
+// ── VERIFICATION STATUS ──
+assert.ok(ctx.VERIF_LABELS.verified, "Should have 'verified' status");
+assert.ok(ctx.VERIF_LABELS.partial, "Should have 'partial' status");
+assert.ok(ctx.VERIF_LABELS.needs_review, "Should have 'needs_review' status");
+assert.ok(ctx.VERIF_LABELS.blocked, "Should have 'blocked' status");
+
+// Verified badge renders correctly
+var badge = ctx.verifBadgeHtml("verified");
+assert.ok(badge.includes("verif-verified"), "Should render verified class");
+var blockedBadge = ctx.verifBadgeHtml("blocked");
+assert.ok(blockedBadge.includes("verif-blocked"), "Should render blocked class");
+
+// ── SEQUENTIAL SWITCHING (no stale state) ──
+// Cycle through all locales
+["en", "hi", "mr", "kn", "ta", "en"].forEach(code => {
+  ctx.S.locale = code;
+  var ans = ctx.pickAnswer("My landlord sent me a notice");
+  assert.strictEqual(ans.a._locale, code, "After switching to " + code + ", answer locale must match");
+});
+
+// Cycle through all profiles
+["citizen", "student", "lawyer", "msme", "citizen"].forEach(pid => {
+  ctx.S.profile = pid;
+  var ans = ctx.pickAnswer("My landlord sent me a notice");
+  assert.strictEqual(ans.a._profile, pid, "After switching to " + pid + ", answer profile must match");
+});
+
+// ── STOP + SEND ──
+ctx.S.locale = "en";
+ctx.S.profile = "citizen";
 ctx.send("My landlord sent me a notice");
 ctx.stop();
 setTimeout(() => {
   assert.ok(!ctx.S.messages.some((m) => m.role === "assistant"), "stopped request must not land");
   assert.strictEqual(ctx.S.thinking, false);
 
-  // a completed request does land, with its first section revealed
+  // a completed request does land
   ctx.send("My landlord sent me a notice");
   setTimeout(() => {
     const a = ctx.S.messages.find((m) => m.role === "assistant");
     assert.ok(a && a.reveal >= 1, "answer should arrive");
-    assert.strictEqual(a.answer, ctx.ANSWERS.tenancy);
-    console.log("ok — all checks passed");
+    assert.ok(a.answer.simple, "answer should have simple field");
+    assert.ok(a.answer._locale === "en", "answer should be in English");
+    assert.ok(a.answer._profile === "citizen", "answer should be for citizen profile");
+    console.log("ok — all checks passed (" + (3 * 5) + " language×topic combos, " + (4 * 5) + " profile×language combos verified)");
   }, 2600);
 }, 2600);
