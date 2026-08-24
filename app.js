@@ -390,7 +390,7 @@ var LADDER = [
 /* ---------- state ---------- */
 
 var S = {
-  view: "landing",
+  view: "chat",
   locale: "en",
   highlighted: "en",
   profile: null, // null | "student" | "lawyer" | "msme" | "citizen"
@@ -1276,7 +1276,7 @@ document.addEventListener("click", function (e) {
   var a = el.getAttribute("data-a");
   if (el.tagName === "A") e.preventDefault();
 
-  if (a === "home") set({ view: "landing", uploadState: 0, tourStep: 0 });
+  if (a === "home") set({ view: "chat", uploadState: 0, tourStep: 0 });
   else if (a === "new") startNew();
   else if (a === "lang-menu") set({ langMenu: !S.langMenu, profileMenu: false });
   else if (a === "profile-menu") set({ profileMenu: !S.profileMenu, langMenu: false });
