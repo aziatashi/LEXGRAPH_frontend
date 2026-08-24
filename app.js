@@ -390,7 +390,7 @@ var LADDER = [
 /* ---------- state ---------- */
 
 var S = {
-  view: "chat",
+  view: "landing",
   locale: "en",
   highlighted: "en",
   profile: null, // null | "student" | "lawyer" | "msme" | "citizen"
@@ -614,7 +614,7 @@ function setLocale(code) {
 
 function setProfile(id) {
   try { window.localStorage.setItem("lexgraph.profile", id); } catch (e) {}
-  set({ profile: id, profileMenu: false });
+  set({ profile: id, profileMenu: false, view: "chat" });
 }
 
 function goHome() { set({ view: "landing", langMenu: false, profileMenu: false }); }
@@ -1348,6 +1348,7 @@ var storedProfile = null;
 try { storedProfile = window.localStorage.getItem("lexgraph.profile"); } catch (e) { storedProfile = null; }
 if (storedProfile && PROFILES.some(function (p) { return p.id === storedProfile; })) {
   S.profile = storedProfile;
+  S.view = "chat"; // returning visitor already has a profile — go straight to chat, skip the picker
 }
 
 render();
