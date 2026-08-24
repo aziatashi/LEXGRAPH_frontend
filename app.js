@@ -680,7 +680,7 @@ function headerHtml() {
         '<span class="logo-txt">LexGraph</span></a>' +
       '<nav class="nav" aria-label="Main">' +
         '<a href="#" data-a="tour" style="color:var(--amber);font-weight:600">Guided Tour</a>' +
-        '<a href="#">Knowledge</a><a href="#">Find free legal help</a>' +
+        '<a href="#" data-a="coming-soon">Knowledge</a><a href="#" data-a="coming-soon">Find free legal help</a>' +
       '</nav>' +
       '<div class="hdr-right">' +
         (prof
@@ -801,8 +801,8 @@ function profileLandingHtml() {
 function footerHtml() {
   return '<footer class="ftr"><div class="ftr-in">' +
     '<div><p class="name">LexGraph</p><p>' + esc({ en: "Legal information in five Indian languages. Free, and without an account.", hi: "पाँच भारतीय भाषाओं में कानूनी जानकारी। मुफ्त, बिना खाते के।", mr: "पाच भारतीय भाषांमध्ये कायदेशीर माहिती. मोफत, खात्याशिवाय.", kn: "ಐದು ಭಾರತೀಯ ಭಾಷೆಗಳಲ್ಲಿ ಕಾನೂನು ಮಾಹಿತಿ. ಉಚಿತ, ಖಾತೆ ಇಲ್ಲದೆ.", ta: "ஐந்து இந்திய மொழிகளில் சட்டத் தகவல். இலவசம், கணக்கு இல்லாமல்." }[S.locale] || "Legal information in five Indian languages. Free, and without an account.") + '</p></div>' +
-    '<div class="links"><a href="#">Knowledge</a><a href="#">Find free legal help</a><a href="#">How it works</a></div>' +
-    '<div class="links"><a href="#">Privacy</a><a href="#">Terms &amp; disclaimer</a><a href="#">Accessibility statement</a></div>' +
+    '<div class="links"><a href="#" data-a="coming-soon">Knowledge</a><a href="#" data-a="coming-soon">Find free legal help</a><a href="#" data-a="coming-soon">How it works</a></div>' +
+    '<div class="links"><a href="#" data-a="coming-soon">Privacy</a><a href="#" data-a="coming-soon">Terms &amp; disclaimer</a><a href="#" data-a="coming-soon">Accessibility statement</a></div>' +
     '<div><p class="fine">LexGraph provides legal information, not legal advice, and is not a law firm or a government service. AI answers can be incomplete or wrong. For advice on your situation, consult a qualified advocate.</p></div>' +
   '</div></footer>';
 }
@@ -933,21 +933,22 @@ function messageHtml(m) {
 function uploadHtml() {
   return '<main style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;background:var(--bg)">' +
     '<div class="upload-modal">' +
-      '<h2>' + esc({ en: "Upload your PDF", hi: "अपना PDF अपलोड करें" }[S.locale] || "Upload your PDF") + '</h2>' +
-      '<p style="color:var(--muted)">LexGraph will analyse the document, identify relevant clauses and allow you to ask questions about it.</p>' +
+      '<h2>' + esc({ en: "Upload your PDF", hi: "अपना PDF अपलोड करें", mr: "तुमची PDF अपलोड करा", kn: "ನಿಮ್ಮ PDF ಅಪ್‌ಲೋಡ್ ಮಾಡಿ", ta: "உங்கள் PDF-ஐ பதிவேற்றவும்" }[S.locale] || "Upload your PDF") + '</h2>' +
+      '<p style="color:var(--muted)">' + esc({ en: "LexGraph will analyse the document, identify relevant clauses and allow you to ask questions about it.", hi: "LexGraph दस्तावेज़ का विश्लेषण करेगा, प्रासंगिक धाराओं की पहचान करेगा और आपको इसके बारे में प्रश्न पूछने की अनुमति देगा।", mr: "LexGraph दस्तऐवजाचे विश्लेषण करेल, संबंधित कलमे ओळखेल आणि तुम्हाला त्याबद्दल प्रश्न विचारण्याची अनुमती देईल.", kn: "LexGraph ಡಾಕ್ಯುಮೆಂಟ್ ಅನ್ನು ವಿಶ್ಲೇಷಿಸುತ್ತದೆ, ಸಂಬಂಧಿತ ಷರತ್ತುಗಳನ್ನು ಗುರುತಿಸುತ್ತದೆ ಮತ್ತು ಅದರ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಲು ನಿಮಗೆ ಅನುಮತಿಸುತ್ತದೆ.", ta: "LexGraph ஆவணத்தை ஆய்வு செய்து, தொடர்புடைய பிரிவுகளை அடையாளம் கண்டு, அதைப் பற்றிய கேள்விகளைக் கேட்க உங்களை அனுமதிக்கும்." }[S.locale] || "LexGraph will analyse the document, identify relevant clauses and allow you to ask questions about it.") + '</p>' +
       (S.uploadState === 0 
         ? '<div class="dropzone" data-a="upload-do">' +
             '<div class="dz-icon">📄</div>' +
-            '<div class="dz-t">Click to upload or drag and drop</div>' +
-            '<div class="dz-d">Supports PDF, DOCX, and scanned images (OCR)</div>' +
+            '<div class="dz-t">' + esc({ en: "Click to upload or drag and drop", hi: "अपलोड करने के लिए क्लिक करें या खींचें और छोड़ें", mr: "अपलोड करण्यासाठी क्लिक करा किंवा ड्रॅग आणि ड्रॉप करा", kn: "ಅಪ್‌ಲೋಡ್ ಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ ಅಥವಾ ಎಳೆದು ಬಿಡಿ", ta: "பதிவேற்ற கிளிக் செய்யவும் அல்லது இழுத்து விடவும்" }[S.locale] || "Click to upload or drag and drop") + '</div>' +
+            '<div class="dz-d">' + esc({ en: "Supports PDF, DOCX, and scanned images (OCR)", hi: "PDF, DOCX और स्कैन की गई छवियों (OCR) का समर्थन करता है", mr: "PDF, DOCX आणि स्कॅन केलेल्या प्रतिमा (OCR) चे समर्थन करते", kn: "PDF, DOCX ಮತ್ತು ಸ್ಕ್ಯಾನ್ ಮಾಡಿದ ಚಿತ್ರಗಳನ್ನು (OCR) ಬೆಂಬಲಿಸುತ್ತದೆ", ta: "PDF, DOCX மற்றும் ஸ்கேன் செய்யப்பட்ட படங்களை (OCR) ஆதரிக்கிறது" }[S.locale] || "Supports PDF, DOCX, and scanned images (OCR)") + '</div>' +
+            '<input type="file" id="pdf-upload" accept=".pdf,.docx,image/*" style="display:none">' +
           '</div>'
         : '<div class="upload-state">' +
-            '<div class="up-step ' + (S.uploadState >= 1 ? (S.uploadState > 1 ? "done" : "active") : "") + '">' + (S.uploadState > 1 ? "✓" : (S.uploadState === 1 ? '<div class="spinner"></div>' : "○")) + ' Reading document...</div>' +
-            '<div class="up-step ' + (S.uploadState >= 2 ? (S.uploadState > 2 ? "done" : "active") : "") + '">' + (S.uploadState > 2 ? "✓" : (S.uploadState === 2 ? '<div class="spinner"></div>' : "○")) + ' Extracting clauses...</div>' +
-            '<div class="up-step ' + (S.uploadState >= 3 ? (S.uploadState > 3 ? "done" : "active") : "") + '">' + (S.uploadState > 3 ? "✓" : (S.uploadState === 3 ? '<div class="spinner"></div>' : "○")) + ' Building legal relationships...</div>' +
+            '<div class="up-step ' + (S.uploadState >= 1 ? (S.uploadState > 1 ? "done" : "active") : "") + '">' + (S.uploadState > 1 ? "✓" : (S.uploadState === 1 ? '<div class="spinner"></div>' : "○")) + ' ' + esc({ en: "Reading document...", hi: "दस्तावेज़ पढ़ रहा है...", mr: "दस्तऐवज वाचत आहे...", kn: "ದಾಖಲೆ ಓದುತ್ತಿದೆ...", ta: "ஆவணத்தைப் படிக்கிறது..." }[S.locale] || "Reading document...") + '</div>' +
+            '<div class="up-step ' + (S.uploadState >= 2 ? (S.uploadState > 2 ? "done" : "active") : "") + '">' + (S.uploadState > 2 ? "✓" : (S.uploadState === 2 ? '<div class="spinner"></div>' : "○")) + ' ' + esc({ en: "Extracting clauses...", hi: "धाराएँ निकाल रहा है...", mr: "कलमे काढत आहे...", kn: "ಷರತ್ತುಗಳನ್ನು ತೆಗೆಯುತ್ತಿದೆ...", ta: "பிரிவுகளைப் பிரித்தெடுக்கிறது..." }[S.locale] || "Extracting clauses...") + '</div>' +
+            '<div class="up-step ' + (S.uploadState >= 3 ? (S.uploadState > 3 ? "done" : "active") : "") + '">' + (S.uploadState > 3 ? "✓" : (S.uploadState === 3 ? '<div class="spinner"></div>' : "○")) + ' ' + esc({ en: "Building legal relationships...", hi: "कानूनी संबंध बना रहा है...", mr: "कायदेशीर संबंध बनवत आहे...", kn: "ಕಾನೂನು ಸಂಬಂಧಗಳನ್ನು ನಿರ್ಮಿಸುತ್ತಿದೆ...", ta: "சட்ட உறவுகளை உருவாக்குகிறது..." }[S.locale] || "Building legal relationships...") + '</div>' +
           '</div>'
       ) +
-      '<button class="btn btn-ghost" data-a="home">Cancel</button>' +
+      '<button class="btn btn-ghost" data-a="home">' + esc({ en: "Cancel", hi: "रद्द करें", mr: "रद्द करा", kn: "ರದ್ದುಮಾಡಿ", ta: "ரத்து செய்" }[S.locale] || "Cancel") + '</button>' +
     '</div></main>';
 }
 
@@ -1035,16 +1036,21 @@ function workspaceHtml() {
     '<section class="ws-left">' +
       '<div class="doc-hdr">' +
         '<p class="title">' + esc(S.docName) + '</p>' +
-        '<p class="meta">' + esc(S.docType) + ' · 14 pages · Scanned (OCR Complete)</p>' +
+        '<p class="meta">' + esc(S.docType) + (S.docUrl ? '' : ' · 14 pages · Scanned (OCR Complete)') + '</p>' +
       '</div>' +
-      '<div class="doc-body">' +
-        '<h2>1. Parties</h2>' +
-        '<p>This Facility Agreement ("Agreement") is made between Bank X ("Lender") and Meridian Textiles ("Borrower").</p>' +
-        '<h2>2. Conditions Precedent</h2>' +
-        '<p class="clause' + (S.activeClause === "c2" ? " active" : "") + '" data-a="clause" data-id="c2"><strong>2.1 KYC Compliance:</strong> The Borrower must furnish all KYC documentation required under the RBI Master Direction prior to disbursement.</p>' +
-        '<h2>4. Indemnity</h2>' +
-        '<p class="clause' + (S.activeClause === "c4" ? " active" : "") + '" data-a="clause" data-id="c4"><strong>4.2 Cap:</strong> The Borrower agrees to indemnify the Lender against any losses arising from default, subject to a cap of INR 50,000,000.</p>' +
-      '</div>' +
+      (S.docUrl
+        ? '<div class="doc-body" style="padding:0; overflow:hidden;">' +
+            '<iframe src="' + S.docUrl + '" style="width:100%; height:100%; border:none;"></iframe>' +
+          '</div>'
+        : '<div class="doc-body">' +
+            '<h2>1. Parties</h2>' +
+            '<p>This Facility Agreement ("Agreement") is made between Bank X ("Lender") and Meridian Textiles ("Borrower").</p>' +
+            '<h2>2. Conditions Precedent</h2>' +
+            '<p class="clause' + (S.activeClause === "c2" ? " active" : "") + '" data-a="clause" data-id="c2"><strong>2.1 KYC Compliance:</strong> The Borrower must furnish all KYC documentation required under the RBI Master Direction prior to disbursement.</p>' +
+            '<h2>4. Indemnity</h2>' +
+            '<p class="clause' + (S.activeClause === "c4" ? " active" : "") + '" data-a="clause" data-id="c4"><strong>4.2 Cap:</strong> The Borrower agrees to indemnify the Lender against any losses arising from default, subject to a cap of INR 50,000,000.</p>' +
+          '</div>'
+      ) +
     '</section>' +
     '<section class="ws-right">' +
       '<div class="ws-tabs">' +
@@ -1060,14 +1066,9 @@ function workspaceHtml() {
 function modalHtml() {
   var hi = langOf(S.highlighted);
   return '<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="lang-title">' +
-    '<button type="button" class="modal-x" aria-label="Close and continue in English" data-a="dismiss">✕</button>' +
-    '<h2 id="lang-title">Choose your language</h2>' +
-    '<p class="greets">' +
-      '<span style="font-family:\'Noto Sans Devanagari\',Inter,sans-serif">अपनी भाषा चुनें</span>' +
-      '<span style="font-family:\'Noto Sans Tamil\',Inter,sans-serif">உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்</span>' +
-      '<span style="font-family:\'Noto Sans Kannada\',Inter,sans-serif">ನಿಮ್ಮ ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ</span>' +
-    "</p>" +
-    '<div class="lang-grid" role="radiogroup" aria-labelledby="lang-title">' +
+    '<button type="button" class="modal-x" aria-label="' + esc({ en: "Close", hi: "बंद करें", mr: "बंद करा", kn: "ಮುಚ್ಚಿ", ta: "மூடு" }[S.locale] || "Close") + '" data-a="dismiss">✕</button>' +
+    '<h2 id="lang-title">' + esc({ en: "Choose your language", hi: "अपनी भाषा चुनें", mr: "तुमची भाषा निवडा", kn: "ನಿಮ್ಮ ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ", ta: "உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்" }[S.locale] || "Choose your language") + '</h2>' +
+    '<div class="lang-grid" role="radiogroup" aria-labelledby="lang-title" style="margin-top:20px">' +
       LANGS.map(function (l) {
         var on = l.code === S.highlighted;
         return '<button type="button" class="lang-card" role="radio" aria-checked="' + on + '" ' +
@@ -1078,7 +1079,7 @@ function modalHtml() {
       }).join("") +
     "</div>" +
     '<button type="button" class="modal-cta" style="font-family:' + hi.font + '" data-a="confirm">' + esc(hi.cta) + "</button>" +
-    '<p class="after">You can change this any time from the top of the page.</p>' +
+    '<p class="after">' + esc({ en: "You can change this any time from the top of the page.", hi: "आप इसे पृष्ठ के शीर्ष से किसी भी समय बदल सकते हैं।", mr: "तुम्ही हे पृष्ठाच्या वरून कधीही बदलू शकता.", kn: "ನೀವು ಇದನ್ನು ಪುಟದ ಮೇಲ್ಭಾಗದಿಂದ ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಬದಲಾಯಿಸಬಹುದು.", ta: "இதை எந்த நேரத்திலும் பக்கத்தின் மேலிருந்து மாற்றலாம்." }[S.locale] || "You can change this any time from the top of the page.") + '</p>' +
     "</div></div>";
 }
 
@@ -1148,6 +1149,23 @@ document.addEventListener("input", function (e) {
   if (pii) pii.hidden = !/\d{6,}/.test(S.draft);
 });
 
+document.addEventListener("change", function (e) {
+  if (e.target.id === "pdf-upload") {
+    if (e.target.files && e.target.files.length > 0) {
+      var file = e.target.files[0];
+      set({ 
+        uploadState: 1,
+        docName: file.name,
+        docUrl: URL.createObjectURL(file),
+        docType: file.type === "application/pdf" ? "PDF Document" : "Document"
+      });
+      setTimeout(function(){ set({ uploadState: 2 }); }, 1000);
+      setTimeout(function(){ set({ uploadState: 3 }); }, 2000);
+      setTimeout(function(){ set({ uploadState: 4, view: "workspace", wsTab: "chat" }); }, 3000);
+    }
+  }
+});
+
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && S.modalOpen) { dismissModal(); return; }
   if (e.key === "Escape" && S.langMenu) { set({ langMenu: false }); return; }
@@ -1188,10 +1206,11 @@ document.addEventListener("click", function (e) {
   else if (a === "retry") retry(el.getAttribute("data-id"));
   else if (a === "upload-start") set({ view: "upload", uploadState: 0 });
   else if (a === "upload-do") {
-    set({ uploadState: 1 });
-    setTimeout(function(){ set({ uploadState: 2 }); }, 1000);
-    setTimeout(function(){ set({ uploadState: 3 }); }, 2000);
-    setTimeout(function(){ set({ uploadState: 4, view: "workspace", wsTab: "chat" }); }, 3000);
+    var fileInput = document.getElementById("pdf-upload");
+    if (fileInput) fileInput.click();
+  }
+  else if (a === "coming-soon") {
+    alert({ en: "This feature is coming soon!", hi: "यह सुविधा जल्द आ रही है!", mr: "ही सुविधा लवकरच येत आहे!", kn: "ಈ ವೈಶಿಷ್ಟ್ಯವು ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ!", ta: "இந்த அம்சம் விரைவில் வரும்!" }[S.locale] || "This feature is coming soon!");
   }
   else if (a === "tab") set({ wsTab: el.getAttribute("data-tab") });
   else if (a === "clause") set({ activeClause: el.getAttribute("data-id") });
