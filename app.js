@@ -417,7 +417,9 @@ var S = {
   tourStep: 0, // 0 = off, 1-10
   tourDemoMode: false,
   docName: "Bank X v. Meridian Textiles — Facility Agreement",
-  docType: "Commercial Contract"
+  docType: "Commercial Contract",
+  attachedDoc: null,
+  attachError: null
 };
 
 /* ---------- mock data ---------- */
@@ -477,6 +479,17 @@ function esc(s) {
   });
 }
 
+function validateAttachedFile(file) {
+  var okType = /\.(pdf|docx)$/i.test(file.name || "") || /^image\//.test(file.type || "") || file.type === "application/pdf" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (!okType) {
+    return { en: "That file type isn't supported. Upload a PDF, DOCX, or image.", hi: "यह फ़ाइल प्रकार समर्थित नहीं है। PDF, DOCX या छवि अपलोड करें।" }[S.locale] || "That file type isn't supported. Upload a PDF, DOCX, or image.";
+  }
+  if (file.size && file.size > 15 * 1024 * 1024) {
+    return { en: "That file is too large. Please upload something under 15 MB.", hi: "यह फ़ाइल बहुत बड़ी है। कृपया 15 MB से छोटी फ़ाइल अपलोड करें।" }[S.locale] || "That file is too large. Please upload something under 15 MB.";
+  }
+  return null;
+}
+
 /* ---------- helpers ---------- */
 
 function profileOf(id) {
@@ -514,12 +527,6 @@ function getLocalizedAnswer(topic) {
   answer._profile = profile;
   answer._locale = locale;
   return answer;
-}
-
-function fetchAnswer(text) {
-  return new Promise(function (resolve) {
-    setTimeout(function () { resolve(pickAnswer(text)); }, 2200);
-  });
 }
 
 /* ---------- verification ---------- */
@@ -623,7 +630,7 @@ function send(raw) {
     later(function () { if (token === inflight) set({ loadingCopy: step.copy }); }, step.at);
   });
 
-  fetchAnswer(text).then(function (picked) {
+  sendMessage(text).then(function (picked) {
     if (token !== inflight) return;
     set({
       thinking: false,
@@ -631,7 +638,7 @@ function send(raw) {
         .map(function (m) { return m.id === userId ? Object.assign({}, m, { failed: false }) : m; })
         .concat([{
           id: botId, role: "assistant", answer: picked.a, escalate: risk,
-          reveal: 1, uncertain: picked.key === "wages", done: false
+          reveal: 1, uncertain: picked.key === "wages", done: false, topicKey: picked.key
         }])
     });
     [2, 3, 4, 5].forEach(function (r, i) {
@@ -1027,12 +1034,24 @@ function chatPaneHtml(standalone) {
         : "") +
     "</div></div>" +
     '<div class="composer"><div class="composer-in">' +
+      (standalone && S.attachedDoc
+        ? '<div class="attach-chip">📄 <span class="name">' + esc(S.attachedDoc.name) + '</span> — ' +
+            esc({ en: "Uploaded successfully", hi: "सफलतापूर्वक अपलोड किया गया" }[S.locale] || "Uploaded successfully") +
+            ' <button type="button" data-a="remove-attach">' + esc({ en: "Remove", hi: "हटाएँ" }[S.locale] || "Remove") + '</button></div>'
+        : "") +
+      (standalone && S.attachError ? '<div class="attach-err">' + esc(S.attachError) + '</div>' : "") +
       '<div class="box">' +
         '<textarea id="composer" rows="2" placeholder="' + esc({ en: "Analyze this clause, research this matter...", hi: "इस धारा का विश्लेषण करें, इस मामले पर शोध करें..." }[S.locale] || "Analyze this clause, research this matter...") + '"></textarea>' +
         '<div class="box-foot"><p>' + esc({ en: "Enter to send · Shift+Enter for new line" }[S.locale] || "Enter to send · Shift+Enter for new line") + '</p>' +
+          '<div style="display:flex;gap:8px;align-items:center">' +
+          (standalone
+            ? '<button type="button" class="icon-btn" data-a="chat-attach" title="' + esc({ en: "Attach a document", hi: "एक दस्तावेज़ संलग्न करें" }[S.locale] || "Attach a document") + '">📎</button>' +
+              '<input type="file" id="chat-attach-upload" accept=".pdf,.docx,image/*" style="display:none">'
+            : "") +
           (S.thinking
             ? '<button type="button" class="btn-stop" data-a="stop">' + esc({ en: "Stop" }[S.locale] || "Stop") + '</button>'
             : '<button type="button" class="btn-send-sm" data-a="submit">' + esc({ en: "Send" }[S.locale] || "Send") + '</button>') +
+          '</div>' +
         "</div>" +
       "</div>" +
       '<p class="legal">LexGraph gives legal information, not legal advice.</p>' +
@@ -1171,6 +1190,15 @@ document.addEventListener("change", function (e) {
       setTimeout(function(){ set({ uploadState: 3 }); }, 2000);
       setTimeout(function(){ set({ uploadState: 4, view: "workspace", wsTab: "chat" }); }, 3000);
     }
+  } else if (e.target.id === "chat-attach-upload") {
+    if (e.target.files && e.target.files.length > 0) {
+      var attached = e.target.files[0];
+      var err = validateAttachedFile(attached);
+      if (err) { set({ attachError: err }); return; }
+      uploadDocument(attached).then(function (doc) {
+        set({ attachedDoc: doc, attachError: null });
+      });
+    }
   }
 });
 
@@ -1216,6 +1244,13 @@ document.addEventListener("click", function (e) {
   else if (a === "upload-do") {
     var fileInput = document.getElementById("pdf-upload");
     if (fileInput) fileInput.click();
+  }
+  else if (a === "chat-attach") {
+    var attachInput = document.getElementById("chat-attach-upload");
+    if (attachInput) attachInput.click();
+  }
+  else if (a === "remove-attach") {
+    set({ attachedDoc: null, attachError: null });
   }
   else if (a === "coming-soon") {
     alert({ en: "This feature is coming soon!", hi: "यह सुविधा जल्द आ रही है!", mr: "ही सुविधा लवकरच येत आहे!", kn: "ಈ ವೈಶಿಷ್ಟ್ಯವು ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ!", ta: "இந்த அம்சம் விரைவில் வரும்!" }[S.locale] || "This feature is coming soon!");

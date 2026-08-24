@@ -241,6 +241,29 @@ setTimeout(() => {
           ctx.render();
           assert.ok(ctx.appNode.innerHTML.includes('id="composer"'), "render() with S.view='chat' must show the chat pane, not the landing page");
           console.log("ok — chat view checks passed");
+
+          // ── validateAttachedFile: accepts PDF, rejects unsupported type ──
+          assert.strictEqual(ctx.validateAttachedFile({ name: "doc.pdf", type: "application/pdf", size: 1024 }), null);
+          assert.ok(ctx.validateAttachedFile({ name: "virus.exe", type: "application/x-msdownload", size: 1024 }), "unsupported file type must return an error string");
+          assert.ok(ctx.validateAttachedFile({ name: "huge.pdf", type: "application/pdf", size: 50 * 1024 * 1024 }), "oversize file must return an error string");
+
+          // ── attaching a document sets S.attachedDoc and renders the chip ──
+          ctx.S.attachedDoc = { name: "constitution.pdf", url: null, type: "application/pdf" };
+          ctx.S.attachError = null;
+          var withDoc = ctx.chatPaneHtml();
+          assert.ok(withDoc.includes("constitution.pdf"), "attached doc name must render in the chip");
+          assert.ok(withDoc.includes('data-a="remove-attach"'), "attach chip must offer a Remove control");
+
+          // ── send() carries topicKey on the assistant message and uses api.sendMessage ──
+          ctx.S.messages = [];
+          ctx.S.attachedDoc = null;
+          ctx.send("My employer hasn't paid my salary");
+          setTimeout(() => {
+            var a = ctx.S.messages.find((m) => m.role === "assistant");
+            assert.ok(a, "assistant message should have arrived via send()");
+            assert.strictEqual(a.topicKey, "wages", "assistant message must carry the matched topic key");
+            console.log("ok — attachment checks passed");
+          }, 2600);
         });
       });
     });
