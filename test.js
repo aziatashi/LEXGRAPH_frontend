@@ -32,7 +32,9 @@ const ctx = {
   navigator: { clipboard: { writeText: () => {} } }
 };
 ctx.appNode = el();
+ctx.fetch = undefined; // no network in the sandbox — translateText must not need it when no key is set
 vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(__dirname + "/api.js", "utf8"), ctx);
 vm.runInContext(fs.readFileSync(__dirname + "/app.js", "utf8"), ctx);
 
 // ── escaping — the XSS boundary ──
@@ -209,5 +211,25 @@ setTimeout(() => {
     assert.ok(a.answer._locale === "en", "answer should be in English");
     assert.ok(a.answer._profile === "citizen", "answer should be for citizen profile");
     console.log("ok — all checks passed (" + (3 * 5) + " language×topic combos, " + (4 * 5) + " profile×language combos verified)");
+
+    // ── api.js: sendMessage wraps pickAnswer ──
+    ctx.S.locale = "en";
+    ctx.sendMessage("My landlord sent me a notice").then((picked) => {
+      assert.strictEqual(picked.key, "tenancy");
+      assert.ok(picked.a.simple, "sendMessage should resolve a localized answer");
+
+      // ── api.js: uploadDocument resolves without URL.createObjectURL in the sandbox ──
+      ctx.uploadDocument({ name: "constitution.pdf", type: "application/pdf" }).then((doc) => {
+        assert.strictEqual(doc.name, "constitution.pdf");
+        assert.strictEqual(doc.type, "application/pdf");
+        assert.strictEqual(doc.url, null, "no URL.createObjectURL in the sandbox — url must be null, not throw");
+
+        // ── api.js: translateText no-ops safely with no API key configured ──
+        ctx.translateText("Hello", "hi", "en").then((out) => {
+          assert.strictEqual(out, "Hello", "with no key configured, translateText must return the input unchanged");
+          console.log("ok — api.js checks passed");
+        });
+      });
+    });
   }, 2600);
 }, 2600);
