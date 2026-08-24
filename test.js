@@ -228,6 +228,19 @@ setTimeout(() => {
         ctx.translateText("Hello", "hi", "en").then((out) => {
           assert.strictEqual(out, "Hello", "with no key configured, translateText must return the input unchanged");
           console.log("ok — api.js checks passed");
+
+          // ── chatPaneHtml: standalone chat view must render, not throw ──
+          ctx.S.view = "chat";
+          ctx.S.messages = [];
+          ctx.S.thinking = false;
+          var chatHtml = ctx.chatPaneHtml();
+          assert.ok(chatHtml.includes('id="composer"'), "standalone chat pane must render the composer textarea");
+          assert.ok(chatHtml.includes('data-a="submit"') || chatHtml.includes('data-a="stop"'), "standalone chat pane must render a send/stop control");
+
+          // ── render(): S.view === "chat" must not fall through to the landing page ──
+          ctx.render();
+          assert.ok(ctx.appNode.innerHTML.includes('id="composer"'), "render() with S.view='chat' must show the chat pane, not the landing page");
+          console.log("ok — chat view checks passed");
         });
       });
     });

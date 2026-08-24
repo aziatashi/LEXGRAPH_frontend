@@ -1003,15 +1003,21 @@ function complianceHtml() {
   '</div>';
 }
 
-function workspaceHtml() {
+function chatPaneHtml(standalone) {
+  if (standalone === undefined) standalone = true;
   var empty = S.messages.length === 0 && !S.thinking;
   var examples = getExamples();
+  var emptyTitle = standalone && !S.attachedDoc
+    ? ({ en: "Ask anything", hi: "कुछ भी पूछें" }[S.locale] || "Ask anything")
+    : ({ en: "What do you want to understand?", hi: "आप क्या समझना चाहते हैं?" }[S.locale] || "What do you want to understand?");
+  var emptyDesc = standalone && !S.attachedDoc
+    ? ({ en: "Type a question below, in any of five languages — or attach a document to ask about it.", hi: "नीचे एक प्रश्न लिखें, या किसी दस्तावेज़ के बारे में पूछने के लिए उसे संलग्न करें।" }[S.locale] || "Type a question below, in any of five languages — or attach a document to ask about it.")
+    : ({ en: "Analyze clauses, check compliance, or research the matter.", hi: "धाराओं का विश्लेषण करें, अनुपालन की जाँच करें, या मामले पर शोध करें।" }[S.locale] || "Analyze clauses, check compliance, or research the matter.");
 
-  var chatTab = 
-    '<div class="stream" id="stream"><div class="stream-in">' +
+  return '<div class="stream" id="stream"><div class="stream-in">' +
       (empty
-        ? '<div class="blank"><h1>' + esc({ en: "What do you want to understand?", hi: "आप क्या समझना चाहते हैं?" }[S.locale] || "What do you want to understand?") + '</h1>' +
-          '<p>' + esc({ en: "Analyze clauses, check compliance, or research the matter.", hi: "धाराओं का विश्लेषण करें, अनुपालन की जाँच करें, या मामले पर शोध करें।" }[S.locale] || "Analyze clauses, check compliance, or research the matter.") + '</p>' +
+        ? '<div class="blank"><h1>' + esc(emptyTitle) + '</h1>' +
+          '<p>' + esc(emptyDesc) + '</p>' +
           '<div class="chips">' + chipsHtml(examples.slice(0, 4), "chip") + "</div></div>"
         : "") +
       S.messages.map(messageHtml).join("") +
@@ -1031,7 +1037,9 @@ function workspaceHtml() {
       "</div>" +
       '<p class="legal">LexGraph gives legal information, not legal advice.</p>' +
     "</div></div>";
+}
 
+function workspaceHtml() {
   return '<main class="ws">' +
     '<section class="ws-left">' +
       '<div class="doc-hdr">' +
@@ -1058,7 +1066,7 @@ function workspaceHtml() {
         '<button class="ws-tab" aria-selected="' + (S.wsTab === 'graph') + '" data-a="tab" data-tab="graph">Knowledge Graph</button>' +
         '<button class="ws-tab" aria-selected="' + (S.wsTab === 'compliance') + '" data-a="tab" data-tab="compliance">Compliance Impact</button>' +
       '</div>' +
-      (S.wsTab === 'chat' ? chatTab : (S.wsTab === 'graph' ? graphHtml() : complianceHtml())) +
+      (S.wsTab === 'chat' ? chatPaneHtml(false) : (S.wsTab === 'graph' ? graphHtml() : complianceHtml())) +
     '</section>' +
   '</main>';
 }
@@ -1125,7 +1133,7 @@ function render() {
 
   app.className = "app";
   app.innerHTML = headerHtml() +
-    (S.view === "workspace" ? workspaceHtml() : landingHtml()) +
+    (S.view === "workspace" ? workspaceHtml() : S.view === "chat" ? chatPaneHtml() : landingHtml()) +
     (S.modalOpen ? modalHtml() : "") +
     tourHtml();
 
