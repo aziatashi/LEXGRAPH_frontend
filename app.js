@@ -419,7 +419,9 @@ var S = {
   docName: "Bank X v. Meridian Textiles — Facility Agreement",
   docType: "Commercial Contract",
   attachedDoc: null,
-  attachError: null
+  attachError: null,
+  translating: {},
+  draftOrigLocale: "en"
 };
 
 /* ---------- mock data ---------- */
@@ -555,10 +557,59 @@ function dismissModal() {
   set({ modalOpen: false, locale: "en", highlighted: "en" });
 }
 
+function retranslateMessages(newLocale) {
+  S.locale = newLocale; // mutate first — getLocalizedAnswer() below reads S.locale
+  var pending = [];
+  var nextMessages = S.messages.map(function (m) {
+    if (m.role === "assistant" && m.topicKey) {
+      var localized = getLocalizedAnswer(m.topicKey);
+      return Object.assign({}, m, { answer: localized });
+    }
+    if (m.role === "user") {
+      if (m.origLocale === newLocale) return Object.assign({}, m, { text: m.origText });
+      if (m.translations[newLocale] !== undefined) return Object.assign({}, m, { text: m.translations[newLocale] });
+      pending.push(m.id);
+      return m;
+    }
+    return m;
+  });
+  var translatingPatch = Object.assign({}, S.translating);
+  pending.forEach(function (id) { translatingPatch[id] = true; });
+  set({ locale: newLocale, messages: nextMessages, translating: translatingPatch });
+
+  var targetLocale = newLocale;
+  S.messages.forEach(function (m) {
+    if (m.role !== "user" || m.translations[targetLocale] !== undefined || m.origLocale === targetLocale) return;
+    if (!S.translating[m.id]) return; // already resolved or superseded by a later switch
+    translateText(m.origText, targetLocale, m.origLocale).then(function (translated) {
+      if (S.locale !== targetLocale) return; // user switched again before this resolved
+      var updatedTranslations = Object.assign({}, m.translations);
+      updatedTranslations[targetLocale] = translated;
+      var updatedTranslating = Object.assign({}, S.translating);
+      delete updatedTranslating[m.id];
+      set({
+        translating: updatedTranslating,
+        messages: S.messages.map(function (x) {
+          return x.id === m.id ? Object.assign({}, x, { text: translated, translations: updatedTranslations }) : x;
+        })
+      });
+    });
+  });
+}
+
 function setLocale(code) {
   try { window.localStorage.setItem("lexgraph.locale", code); } catch (e) {}
   document.documentElement.setAttribute("lang", code);
-  set({ locale: code, highlighted: code, langMenu: false });
+  set({ highlighted: code, langMenu: false });
+  retranslateMessages(code);
+  if (S.draft && S.draftOrigLocale !== code) {
+    translateText(S.draft, code, S.draftOrigLocale).then(function (translated) {
+      if (S.locale !== code) return;
+      S.draft = translated;
+      S.draftOrigLocale = code;
+      render();
+    });
+  }
 }
 
 function setProfile(id) {
@@ -623,7 +674,7 @@ function send(raw) {
     thinking: true,
     loadingCopy: LADDER[0].copy,
     title: S.messages.length ? S.title : (text.length > 46 ? text.slice(0, 46) + "…" : text),
-    messages: S.messages.concat([{ id: userId, role: "user", text: text, failed: false }])
+    messages: S.messages.concat([{ id: userId, role: "user", text: text, failed: false, origText: text, origLocale: S.locale, translations: {} }])
   });
 
   LADDER.slice(1).forEach(function (step) {
@@ -921,6 +972,7 @@ function messageHtml(m) {
   if (m.role === "user") {
     return '<div class="msg"><div class="user">' +
       '<div class="bubble">' + esc(m.text) + "</div>" +
+      (S.translating[m.id] ? '<p class="translating">' + esc({ en: "Translating…", hi: "अनुवाद हो रहा है…" }[S.locale] || "Translating…") + '</p>' : "") +
       (m.failed
         ? '<div class="fail"><span>' + esc({ en: "We could not reach the assistant. Your message is safe.", hi: "हम सहायक तक नहीं पहुँच सके। आपका संदेश सुरक्षित है।", mr: "आम्ही सहाय्यकापर्यंत पोहोचू शकलो नाही. तुमचा संदेश सुरक्षित आहे.", kn: "ಸಹಾಯಕನನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ನಿಮ್ಮ ಸಂದೇಶ ಸುರಕ್ಷಿತ.", ta: "உதவியாளரை அணுக முடியவில்லை. உங்கள் செய்தி பாதுகாப்பாக உள்ளது." }[S.locale] || "We could not reach the assistant. Your message is safe.") + '</span>' +
           '<button type="button" data-a="retry" data-id="' + m.id + '">' + esc({ en: "Retry", hi: "पुनः प्रयास", mr: "पुन्हा प्रयत्न", kn: "ಮರುಪ್ರಯತ್ನ", ta: "மீண்டும் முயற்சி" }[S.locale] || "Retry") + '</button></div>'
@@ -1171,7 +1223,9 @@ function render() {
 
 document.addEventListener("input", function (e) {
   if (e.target.tagName !== "TEXTAREA") return;
+  var wasEmpty = !S.draft;
   S.draft = e.target.value;
+  if (wasEmpty && S.draft) S.draftOrigLocale = S.locale;
   var pii = document.getElementById("pii");
   if (pii) pii.hidden = !/\d{6,}/.test(S.draft);
 });

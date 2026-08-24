@@ -263,6 +263,50 @@ setTimeout(() => {
             assert.ok(a, "assistant message should have arrived via send()");
             assert.strictEqual(a.topicKey, "wages", "assistant message must carry the matched topic key");
             console.log("ok — attachment checks passed");
+
+            // ── send() stamps origText/origLocale/translations on the user message ──
+            var userId = ctx.S.messages.find((m) => m.role === "user").id;
+            var userMsg = ctx.S.messages.find((m) => m.id === userId);
+            assert.strictEqual(userMsg.origText, "My employer hasn't paid my salary");
+            assert.strictEqual(userMsg.origLocale, "en");
+            assert.strictEqual(Object.keys(userMsg.translations).length, 0, "translations cache must start empty");
+
+            // ── retranslateMessages: switching to the message's own origLocale needs no API call ──
+            ctx.S.locale = "en";
+            ctx.retranslateMessages("en");
+            userMsg = ctx.S.messages.find((m) => m.id === userId);
+            assert.strictEqual(userMsg.text, "My employer hasn't paid my salary", "switching to origLocale must not alter the text");
+            assert.ok(!ctx.S.translating[userId], "no translation should be in flight for a same-locale switch");
+
+            // ── retranslateMessages: assistant message re-localizes instantly from the static corpus ──
+            ctx.S.locale = "hi";
+            ctx.retranslateMessages("hi");
+            var botMsg = ctx.S.messages.find((m) => m.role === "assistant");
+            assert.strictEqual(botMsg.answer._locale, "hi", "assistant answer must re-localize to the new locale");
+            assert.strictEqual(botMsg.answer.simple, ctx.ANSWERS.wages.hi.simple);
+
+            // ── retranslateMessages: caches a translation and does not re-call translateText for it again ──
+            var calls = 0;
+            var originalTranslate = ctx.translateText;
+            ctx.translateText = function (text, target, source) {
+              calls++;
+              return originalTranslate(text, target, source);
+            };
+            ctx.S.locale = "mr";
+            ctx.retranslateMessages("mr");
+            setTimeout(() => {
+              assert.strictEqual(calls, 1, "one uncached user message should trigger exactly one translateText call");
+              userMsg = ctx.S.messages.find((m) => m.id === userId);
+              assert.ok(userMsg.translations.mr !== undefined, "translation must be cached after it resolves");
+              var callsAfterCache = calls;
+              ctx.S.locale = "en";
+              ctx.retranslateMessages("en");
+              ctx.S.locale = "mr";
+              ctx.retranslateMessages("mr");
+              assert.strictEqual(calls, callsAfterCache, "re-switching to an already-cached locale must not call translateText again");
+              ctx.translateText = originalTranslate;
+              console.log("ok — translation checks passed");
+            }, 50);
           }, 2600);
         });
       });
